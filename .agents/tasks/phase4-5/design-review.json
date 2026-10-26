@@ -1,0 +1,13 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    { "id": 1, "severity": "NIT", "title": "Email trim/lower-case not stated for createEditorSchema and the CLI (only loginStep1Schema)", "location": "design.md §9 createEditorSchema, §14, §4.2 AdminUser.email comment", "fix": "Shared emailSchema = z.string().trim().toLowerCase().pipe(z.email().max(254)) used by login, createEditor and the CLI; unit test ' Bob@Example.ORG ' -> 'bob@example.org'." },
+    { "id": 2, "severity": "NIT", "title": "Order of operations for sealing TOTP with AAD totp:<id> before the cuid id is known is unspecified", "location": "design.md §14, §3.5 step 5", "fix": "In one transaction: create with totpSecretEnc null/totpEnabled false, then update with seal(secret, `totp:${user.id}`) and totpEnabled true (CLI, --reset, e2e-prepare)." },
+    { "id": 3, "severity": "NIT", "title": "E2E: \"1\" in webServer.env has no defined consumer", "location": "design.md §3.5", "fix": "Remove it, or state its single use and add a static check that no file under src/ reads process.env.E2E." },
+    { "id": 4, "severity": "NIT", "title": "IP rate-limit key trusts x-forwarded-for; the Vercel-only trust assumption is undocumented", "location": "design.md §7.2, §7.6 step 1.2", "fix": "Document in §7.2 and the README security notes that the IP key relies on Vercel overwriting x-forwarded-for; account lockout is the primary control." },
+    { "id": 5, "severity": "NIT", "title": "First Neon deploy can prerender an empty home page before seeding", "location": "design.md §19.5, §6.4", "fix": "README order: db:deploy -> db:seed -> admin:create-owner, then the first deploy (or Redeploy after seeding)." },
+    { "id": 6, "severity": "NIT", "title": "Exact Cache-Control: no-store assertion may fail because Next sets its own Cache-Control on dynamic responses", "location": "design.md §12, §17.3 admin-access.spec.ts", "fix": "E2E asserts cache-control contains 'no-store'; the other headers exactly." },
+    { "id": 7, "severity": "NIT", "title": "Meaning of an empty publishedAt on update is undefined", "location": "design.md §9 postSchema, §11 posts", "fix": "Form always pre-fills publishedAt; empty on update = keep stored value; only a stored null becomes now on publish; unit test that the date is unchanged." }
+  ],
+  "reviewDoc": "c:/Users/rasaily/Downloads/mission app/.agents/tasks/phase4-5/design-review.md"
+}

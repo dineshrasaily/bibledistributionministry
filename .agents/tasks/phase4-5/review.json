@@ -1,0 +1,27 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    {
+      "id": "R1",
+      "severity": "NIT",
+      "file": "src/components/admin/UploadHint.tsx",
+      "problem": "Post/event cover images, media thumbnails and YouTube embeds are stored but no public component renders them yet (only SiteSettings.logoUrl is shown), so 'For now, paste an image link or a YouTube link' implies a public effect that doesn't exist in this phase.",
+      "fix": "Extend the hint and the README admin guide to say links are saved now and appear once the media/detail pages arrive, or render thumbnailUrl on the home featured cards."
+    },
+    {
+      "id": "R2",
+      "severity": "NIT",
+      "file": "src/components/admin/UploadHint.tsx",
+      "problem": "The single UPLOAD_HINT constant tells users to paste 'a YouTube link' into image-only fields (post/event cover, settings logo); optionalSafeUrl accepts it, so a YouTube page URL could be stored as an image source.",
+      "fix": "Use field-specific wording ('paste an image link') on image fields and keep the YouTube wording on the media video field."
+    },
+    {
+      "id": "R3",
+      "severity": "NIT",
+      "file": "src/components/admin/AdminNav.tsx",
+      "problem": "At 1280x900 the last sidebar item 'Log out' is cut off at the bottom edge (dashboard-1280.png).",
+      "fix": "Tighten sidebar spacing or pin the session/logout block to the sidebar bottom."
+    }
+  ],
+  "reviewDoc": "c:/Users/rasaily/Downloads/mission app/.agents/tasks/phase4-5/review.md"
+}

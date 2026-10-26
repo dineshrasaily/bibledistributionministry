@@ -1,0 +1,323 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- enums ----------
+enum AdminRole {
+  OWNER
+  EDITOR
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum PostType {
+  DEVOTIONAL
+  ARTICLE
+  MINISTRY_UPDATE
+  BIBLE_STUDY
+  TESTIMONY
+}
+
+enum EventKind {
+  MISSION_TRIP
+  OUTREACH
+  SERVICE
+  ANNOUNCEMENT
+}
+
+enum EventStatus {
+  UPCOMING
+  COMPLETED
+  CANCELLED
+}
+
+enum BibleTranslation {
+  WEB
+  KJV
+}
+
+enum MediaType {
+  IMAGE
+  AUDIO
+  VIDEO_EMBED
+}
+
+enum MediaCategory {
+  SERMON
+  WORSHIP
+  PODCAST
+  GALLERY
+  GENERAL
+}
+
+enum PrayerStatus {
+  NEW
+  PRAYED
+  ARCHIVED
+}
+
+enum MessageKind {
+  GENERAL
+  TESTIMONY
+  VOLUNTEER
+}
+
+enum MessageStatus {
+  NEW
+  READ
+  ARCHIVED
+}
+
+enum ChallengePurpose {
+  VERIFY
+  ENROLL
+}
+
+// ---------- settings ----------
+model SiteSettings {
+  id                    String   @id @default("singleton")
+  ministryName          String
+  taglineEn             String?
+  taglineNe             String?
+  missionStatementEn    String?
+  missionStatementNe    String?
+  visionEn              String? // Markdown
+  visionNe              String?
+  valuesEn              String? // Markdown
+  valuesNe              String?
+  statementOfFaithEn    String? // Markdown
+  statementOfFaithNe    String?
+  aboutIntroEn          String? // plain text, paragraphs separated by blank lines
+  aboutIntroNe          String?
+  logoUrl               String? // TODO(Phase 7): Vercel Blob upload
+  contactEmail          String
+  socialLinks           Json     @default("[]") // SocialLink[] validated by Zod
+  donationsEnabled      Boolean  @default(false)
+  taxDeductibleVerified Boolean  @default(false) // OWNER only; stored for future wording
+  isDemo                Boolean  @default(true) // drives site-wide DemoBanner + hero/intro DemoBadge
+  updatedAt             DateTime @updatedAt
+}
+
+// ---------- admin auth ----------
+model AdminUser {
+  id               String    @id @default(cuid())
+  email            String    @unique // stored lower-cased + trimmed
+  name             String
+  passwordHash     String // Argon2id PHC string
+  totpSecretEnc    String? // "v1:<iv>:<tag>:<ct>" AES-256-GCM, AAD "totp:<id>"
+  totpEnabled      Boolean   @default(false)
+  lastTotpStep     Int? // replay protection (otplib afterTimeStep)
+  role             AdminRole
+  isActive         Boolean   @default(true)
+  failedLoginCount Int       @default(0)
+  lockedUntil      DateTime?
+  lastLoginAt      DateTime?
+  sessionVersion   Int       @default(1) // bump to revoke all JWTs of this user
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  posts      Post[]
+  auditLogs  AuditLog[]
+  challenges LoginChallenge[]
+
+  @@index([role, isActive])
+}
+
+model LoginChallenge {
+  id               String           @id @default(cuid())
+  tokenHash        String           @unique // sha256(base64url token); raw token only in cookie
+  userId           String
+  user             AdminUser        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose          ChallengePurpose
+  pendingSecretEnc String? // ENROLL only; AAD "enroll:<userId>"
+  attempts         Int              @default(0)
+  expiresAt        DateTime
+  consumedAt       DateTime?
+  createdAt        DateTime         @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  ipHash    String // sha256(AUTH_SECRET + ip), never the raw IP
+  userId    String? // null for unknown emails
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  @@index([ipHash, createdAt])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id         String     @id @default(cuid())
+  actorId    String?
+  actor      AdminUser? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actorEmail String? // snapshot; "cli" for the bootstrap script
+  action     String // e.g. "post.create", "settings.update", "auth.login.success"
+  entityType String // "Post", "SiteSettings", "AdminUser", ...
+  entityId   String?
+  metadata   Json? // field names changed, status transitions; never secrets or message bodies
+  createdAt  DateTime   @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+}
+
+// ---------- content ----------
+model Post {
+  id               String         @id @default(cuid())
+  type             PostType
+  slug             String         @unique
+  titleEn          String
+  titleNe          String?
+  excerptEn        String
+  excerptNe        String?
+  bodyEn           String         @default("") // Markdown
+  bodyNe           String?
+  scriptureRefs    String[]       @default([])
+  coverImageUrl    String? // TODO(Phase 7)
+  status           ContentStatus  @default(DRAFT)
+  publishedAt      DateTime?
+  isFeatured       Boolean        @default(false)
+  isDemo           Boolean        @default(false)
+  seoTitleEn       String?
+  seoTitleNe       String?
+  seoDescriptionEn String?
+  seoDescriptionNe String?
+  authorId         String?
+  author           AdminUser?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  categories       PostCategory[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([status, type, publishedAt])
+  @@index([status, isFeatured, publishedAt])
+}
+
+model Category {
+  id        String         @id @default(cuid())
+  slug      String         @unique
+  nameEn    String
+  nameNe    String?
+  posts     PostCategory[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model PostCategory {
+  postId     String
+  categoryId String
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([postId, categoryId])
+  @@index([categoryId])
+}
+
+model BibleVerse {
+  id          String           @id @default(cuid())
+  reference   String // "Isaiah 6:8"
+  text        String // English text of `translation` only (never a Nepali translation)
+  translation BibleTranslation @default(WEB)
+  featuredOn  DateTime?        @unique @db.Date // verse of the day (UTC date)
+  status      ContentStatus    @default(PUBLISHED)
+  isDemo      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([status, featuredOn])
+}
+
+model Event {
+  id              String        @id @default(cuid())
+  kind            EventKind
+  slug            String        @unique
+  titleEn         String
+  titleNe         String?
+  descriptionEn   String? // Markdown
+  descriptionNe   String?
+  reportEn        String? // Markdown post-trip report
+  reportNe        String?
+  startsAt        DateTime
+  endsAt          DateTime?
+  locationEn      String?
+  locationNe      String?
+  volunteerInfoEn String?
+  volunteerInfoNe String?
+  status          EventStatus   @default(UPCOMING) // lifecycle
+  publishStatus   ContentStatus @default(DRAFT) // visibility
+  coverImageUrl   String? // TODO(Phase 7)
+  isDemo          Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([publishStatus, status, startsAt])
+}
+
+model MediaItem {
+  id              String        @id @default(cuid())
+  type            MediaType
+  category        MediaCategory @default(GENERAL)
+  titleEn         String
+  titleNe         String?
+  descriptionEn   String?
+  descriptionNe   String?
+  url             String? // IMAGE / AUDIO: https URL or site path. TODO(Phase 7)
+  embedUrl        String? // VIDEO_EMBED: normalized https://www.youtube-nocookie.com/embed/<id>
+  altTextEn       String? // required for IMAGE (Zod)
+  altTextNe       String?
+  durationMinutes Int?
+  thumbnailUrl    String? // TODO(Phase 7)
+  publishedAt     DateTime      @default(now())
+  isFeatured      Boolean       @default(false)
+  status          ContentStatus @default(DRAFT)
+  isDemo          Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([status, isFeatured, publishedAt])
+  @@index([status, category, publishedAt])
+}
+
+// ---------- inbox (Phase 6 writes, Phase 5 reads) ----------
+model PrayerRequest {
+  id           String       @id @default(cuid())
+  name         String?
+  email        String?
+  isAnonymous  Boolean      @default(false)
+  body         String
+  shareConsent Boolean      @default(false)
+  status       PrayerStatus @default(NEW)
+  locale       String? // "en" | "ne", set by the Phase 6 form
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model ContactMessage {
+  id           String        @id @default(cuid())
+  name         String
+  email        String
+  kind         MessageKind   @default(GENERAL)
+  subject      String
+  body         String
+  shareConsent Boolean       @default(false)
+  status       MessageStatus @default(NEW)
+  locale       String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([status, createdAt])
+}

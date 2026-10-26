@@ -1,0 +1,35 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# env files (only the example is tracked)
+.env*
+!.env.example
+
+# testing
+coverage/
+.vitest/
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
+playwright/.auth/
+
+# local Postgres data (npm run db:start)
+.local/
+
+# generated Prisma client (prisma generate)
+src/generated/
+
+# generated screenshots
+.agents/screenshots/
+
+# misc
+.vercel
+npm-debug.log*
+.DS_Store

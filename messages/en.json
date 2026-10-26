@@ -1,0 +1,157 @@
+{
+  "Metadata": {
+    "siteDescription": "A bilingual demonstration website for a personal Christian ministry. All content shown is sample content.",
+    "home": {
+      "title": "Home",
+      "description": "Welcome to {name}, a demonstration site for a personal Christian ministry sharing devotionals, ministry updates and mission news."
+    },
+    "about": {
+      "title": "About",
+      "description": "Learn about the vision and heart behind {name}. This page is coming in a later phase."
+    },
+    "devotionals": {
+      "title": "Devotionals",
+      "description": "Devotionals and Bible studies from {name}. This page is coming in a later phase."
+    },
+    "missions": {
+      "title": "Missions",
+      "description": "Mission trips, outreach and events from {name}. This page is coming in a later phase."
+    },
+    "media": {
+      "title": "Media",
+      "description": "Sermons, videos and audio from {name}. This page is coming in a later phase."
+    },
+    "prayer": {
+      "title": "Prayer",
+      "description": "Share a prayer request with {name}. This page is coming in a later phase."
+    },
+    "support": {
+      "title": "Support the Mission",
+      "description": "Ways to support the work of {name}. This page is coming in a later phase."
+    },
+    "contact": {
+      "title": "Contact",
+      "description": "Get in touch with {name}. This page is coming in a later phase."
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "description": "How {name} handles personal information. This page is coming in a later phase."
+    },
+    "terms": {
+      "title": "Terms of Use",
+      "description": "Terms for using the {name} website. This page is coming in a later phase."
+    },
+    "notFound": {
+      "title": "Page not found",
+      "description": "The page you are looking for could not be found."
+    }
+  },
+  "Nav": {
+    "home": "Home",
+    "about": "About",
+    "devotionals": "Devotionals",
+    "missions": "Missions",
+    "media": "Media",
+    "prayer": "Prayer",
+    "support": "Support",
+    "contact": "Contact",
+    "privacy": "Privacy",
+    "terms": "Terms"
+  },
+  "Header": {
+    "supportCta": "Support the Mission",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "menuTitle": "Menu",
+    "mainNavLabel": "Main navigation",
+    "homeLinkLabel": "{name} home"
+  },
+  "LanguageSwitcher": {
+    "label": "Language",
+    "en": "English",
+    "ne": "नेपाली"
+  },
+  "SkipLink": {
+    "label": "Skip to main content"
+  },
+  "DemoBanner": {
+    "text": "This site shows demonstration content."
+  },
+  "Common": {
+    "demoBadge": "Demo content",
+    "comingSoon": "Coming soon",
+    "viewAll": "View all",
+    "readMore": "Read more",
+    "watch": "Watch",
+    "eventDetails": "Event details",
+    "minutes": "{count} min",
+    "videoPlaceholder": "Video placeholder"
+  },
+  "Home": {
+    "ctaLearnMore": "Learn More",
+    "ctaPrayer": "Prayer Request",
+    "ctaSupport": "Support the Mission",
+    "verseEyebrow": "Featured verse",
+    "verseNoteNe": "A Nepali translation will be added later; the English WEB text is shown for now.",
+    "introEyebrow": "About the ministry",
+    "introTitle": "A small ministry with a simple calling",
+    "introPanelLabel": "Scripture · Prayer · Service",
+    "updatesEyebrow": "News",
+    "updatesTitle": "Recent ministry updates",
+    "updatesDescription": "Sample updates showing how news from the field will appear.",
+    "updatesEmptyTitle": "No updates yet",
+    "updatesEmptyDescription": "Ministry updates will appear here once they are published.",
+    "featuredEyebrow": "Watch and read",
+    "featuredTitle": "Featured sermons and devotionals",
+    "featuredDescription": "Sample sermons, videos and devotionals. Video thumbnails are placeholders.",
+    "featuredEmptyTitle": "Nothing featured yet",
+    "featuredEmptyDescription": "Featured sermons and devotionals will appear here.",
+    "eventsEyebrow": "Get involved",
+    "eventsTitle": "Upcoming mission events",
+    "eventsDescription": "Sample events showing how mission trips and outreach will be listed.",
+    "eventsEmptyTitle": "No upcoming events",
+    "eventsEmptyDescription": "Upcoming mission trips and events will be listed here.",
+    "ctaBandTitle": "Walk with us in prayer and service",
+    "ctaBandBody": "Pray with us, share a request, or learn how you can support the mission.",
+    "ctaBandPrimary": "Support the Mission",
+    "ctaBandSecondary": "Prayer Request"
+  },
+  "PostTypes": {
+    "DEVOTIONAL": "Devotional",
+    "ARTICLE": "Article",
+    "MINISTRY_UPDATE": "Ministry update",
+    "BIBLE_STUDY": "Bible study",
+    "TESTIMONY": "Testimony"
+  },
+  "EventKinds": {
+    "MISSION_TRIP": "Mission trip",
+    "OUTREACH": "Outreach",
+    "SERVICE": "Service",
+    "ANNOUNCEMENT": "Announcement"
+  },
+  "MediaKinds": {
+    "SERMON": "Sermon",
+    "VIDEO": "Video",
+    "AUDIO": "Audio",
+    "IMAGE": "Image"
+  },
+  "Placeholder": {
+    "body": "This page is coming in a later phase.",
+    "emailNote": "Until then, you can reach us at:",
+    "backHome": "Back to home"
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "body": "Sorry, we could not find the page you were looking for.",
+    "backHome": "Back to home"
+  },
+  "Footer": {
+    "missionLine": "A sample mission line: sharing hope through Scripture, prayer and service.",
+    "navHeading": "Explore",
+    "contactHeading": "Contact",
+    "socialHeading": "Follow",
+    "placeholder": "(placeholder)",
+    "legalHeading": "Legal",
+    "copyright": "© {year} {name}. Demonstration site."
+  }
+}

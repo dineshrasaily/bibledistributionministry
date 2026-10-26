@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+/* Design tokens: site palette + typography. */
+@theme {
+  --color-navy: #1e2a44;
+  --color-navy-deep: #141c2f;
+  --color-ivory: #fbf8f3;
+  --color-beige: #ede4d3;
+  /* Gold: decorative accents, borders, icons and large text only. */
+  --color-gold: #b8924a;
+  /* Dark gold: any gold-coloured text on light backgrounds (WCAG AA). */
+  --color-gold-dark: #8a6a2f;
+  /* Light gold: gold button hover only. Navy text on it is about 6.1:1. */
+  --color-gold-light: #c9a55f;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-lora), Georgia, "Times New Roman", serif;
+
+  --animate-fade-up: fade-up 600ms cubic-bezier(0.2, 0.6, 0.2, 1) both;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@utility gold-rule {
+  display: block;
+  height: 1px;
+  width: 4rem;
+  background-color: var(--color-gold);
+}
+
+/*
+ * Letter-spacing breaks up Devanagari clusters (matras, conjuncts and the
+ * headline bar). Unlayered so it overrides Tailwind's tracking-* utilities.
+ */
+html:lang(ne) [class*="tracking-"] {
+  letter-spacing: normal;
+}
+
+@layer base {
+  /* Devanagari-capable fonts first for the Nepali locale. */
+  html:lang(ne) {
+    --font-sans:
+      var(--font-noto-sans-deva), var(--font-inter), ui-sans-serif, system-ui,
+      sans-serif;
+    --font-serif: var(--font-noto-serif-deva), var(--font-lora), Georgia, serif;
+  }
+
+  html {
+    background-color: var(--color-ivory);
+    color: var(--color-navy);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: 1.0625rem; /* 17px */
+    line-height: 1.6;
+  }
+
+  @media (min-width: 48rem) {
+    body {
+      font-size: 1.125rem; /* 18px */
+    }
+  }
+
+  html:lang(ne) body {
+    line-height: 1.75;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-serif);
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-gold-dark);
+    outline-offset: 3px;
+  }
+
+  /* Admin (always lang="en"): Nepali inputs and previews use Noto Sans Devanagari. */
+  .admin-root [lang="ne"] {
+    font-family:
+      var(--font-noto-sans-deva, ui-sans-serif), var(--font-inter), system-ui,
+      sans-serif;
+    letter-spacing: normal;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

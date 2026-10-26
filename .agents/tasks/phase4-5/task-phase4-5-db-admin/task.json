@@ -1,0 +1,7 @@
+{
+  "task_id": "task-phase4-5-db-admin",
+  "task_description": "Phase 4: move all public content and site settings from demo arrays into PostgreSQL via Prisma 7 (embedded-postgres locally, Neon in prod), keeping the public site identical after seeding. Phase 5: secure /admin CMS with Auth.js v5 Credentials + Argon2id + encrypted TOTP, OWNER + max 3 EDITORs, server-side guards, Zod + AuditLog, sanitized Markdown, en+ne content with fallback, CRUD for posts/categories/verses/events/media, settings/users/inbox/audit, E2E + admin screenshots, README/.env.example. Follows the approved design .agents/tasks/phase4-5/design.md and plan .agents/tasks/phase4-5/plan.md. No AWS, no worktree, no commits.",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}
