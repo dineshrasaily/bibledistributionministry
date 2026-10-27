@@ -1,0 +1,10 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    { "severity": "LOW", "confidence": "likely", "label": "Turnstile hostname not verified", "detail": "verifyTurnstile accepts any success+action match. Also compare data.hostname with the site host when live keys are set.", "file": "src/server/forms/turnstile.ts" },
+    { "severity": "LOW", "confidence": "confirmed", "label": "Notice email falls back to demo contactEmail", "detail": "Without CONTACT_TO_EMAIL, notices go to SiteSettings.contactEmail (hello@example.org in demo data). Skip and log when the recipient is empty or example.org, or list CONTACT_TO_EMAIL as required in the go-live checklist.", "file": "src/server/notify/email.ts" },
+    { "severity": "LOW", "confidence": "confirmed", "label": "Turnstile error not associated with a control", "detail": "The prayer-/contact-turnstile-error FieldError ids are referenced by no aria-describedby. Point the widget group at them.", "file": "src/components/public/PrayerForm.tsx, src/components/public/ContactForm.tsx" },
+    { "severity": "NIT", "confidence": "confirmed", "label": "Unpublish of nothing still audits", "detail": "unpublishPrayer/unpublishTestimony on a missing id succeed and write { removed: 0 }. Consider returning NOT_FOUND.", "file": "src/server/services/inbox.ts" }
+  ],
+  "reviewDoc": "c:/Users/rasaily/Downloads/mission app/.agents/tasks/phase6/review.md"
+}

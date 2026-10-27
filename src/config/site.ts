@@ -51,4 +51,5 @@ export const defaultSiteSettings = {
   donationsEnabled: false,
   taxDeductibleVerified: false,
   isDemo: true,
+  inboxRetentionMonths: 12,
 } satisfies Omit<SiteSettings, "id" | "updatedAt">;

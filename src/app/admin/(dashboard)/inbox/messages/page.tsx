@@ -36,7 +36,7 @@ async function MessageList({ query }: { query: Query }) {
             ? "No matching messages"
             : "No messages yet"
         }
-        description="They will appear here when the contact form launches."
+        description="They will appear here when someone sends the contact form."
       />
     );
   }
@@ -53,6 +53,7 @@ async function MessageList({ query }: { query: Query }) {
               <StatusBadge status={m.status} />
               <Badge>{MESSAGE_KIND_LABELS[m.kind]}</Badge>
               <ConsentBadge consent={m.shareConsent} />
+              {m.publicShare ? <Badge variant="navy">Public</Badge> : null}
             </>
           ),
           meta: `From ${m.name} · ${formatDateTime(m.createdAt)}`,

@@ -13,6 +13,7 @@ import { ConsentBadge, PrivacyNotice } from "@/components/admin/PrivacyNotice";
 import { RecordList } from "@/components/admin/RecordList";
 import { ListSkeleton } from "@/components/admin/Skeletons";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PrayerStatus } from "@/generated/prisma/enums";
 import { parseListQuery, type ListQuery } from "@/lib/validation/list-query";
@@ -34,7 +35,7 @@ async function PrayerList({ query }: { query: Query }) {
             ? "No matching prayer requests"
             : "No prayer requests yet"
         }
-        description="They will appear here when the prayer form launches."
+        description="They will appear here when someone sends the prayer form."
       />
     );
   }
@@ -50,6 +51,7 @@ async function PrayerList({ query }: { query: Query }) {
             <>
               <StatusBadge status={p.status} />
               <ConsentBadge consent={p.shareConsent} />
+              {p.publicShare ? <Badge variant="navy">Public</Badge> : null}
             </>
           ),
           meta: `Received ${formatDateTime(p.createdAt)}`,

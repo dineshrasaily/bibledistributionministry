@@ -13,10 +13,12 @@ wording until the ministry's legal status has been verified.
 1. Design system ✅
 2. Layout + home page ✅
 3. Core public pages (About, Devotionals + detail, Missions + detail, Media
-   Center, Privacy, Terms) ✅ (Prayer, Support and Contact are placeholders
-   until Phases 6 and 8)
+   Center, Privacy, Terms) ✅ (Support is a placeholder until Phase 8)
 4. Database-backed content (Prisma 7 + PostgreSQL) ✅
 5. Secure admin (password + authenticator app, owner + max 3 editors) ✅
+6. Prayer request and contact forms (Turnstile, honeypot, rate limit,
+   link-only email notices, consent-only public prayer wall, retention
+   purge) ✅
 
 ## Tech stack
 
@@ -155,8 +157,48 @@ See `.env.example`. All are server-only except `NEXT_PUBLIC_*`.
 | `AUTH_SECRET`          | Auth.js session encryption (32+ random bytes, base64)               |
 | `TOTP_ENCRYPTION_KEY`  | 32-byte base64 key encrypting authenticator secrets in the database |
 
-Future phases (prayer/contact forms, media storage, donations) have
-commented, empty placeholders in `.env.example`.
+Prayer and contact forms (Phase 6), all optional:
+
+| Variable                   | Purpose                                                                                |
+| -------------------------- | -------------------------------------------------------------------------------------- |
+| `TURNSTILE_SITE_KEY`       | Cloudflare Turnstile site key (read on the server; empty = Cloudflare's test keys)     |
+| `TURNSTILE_SECRET_KEY`     | Turnstile secret key (both keys must be set, otherwise the test keys are used)         |
+| `RESEND_API_KEY`           | Resend API key for "new prayer request / message" notices (empty = notice only logged) |
+| `RESEND_FROM_EMAIL`        | Sender address on a domain verified in Resend, e.g. `notifications@your-domain`        |
+| `CONTACT_TO_EMAIL`         | Who receives the notices (defaults to the contact email in Settings)                   |
+| `FORM_RATE_LIMIT_PER_HOUR` | Accepted submissions per form per network per hour (default 5; the E2E suite sets 100) |
+
+Later phases (media storage, donations) have commented, empty placeholders
+in `.env.example`.
+
+### Setting up Cloudflare Turnstile (spam protection)
+
+Without keys the forms use Cloudflare's official always-pass **test** keys,
+so they work locally and in tests but do not stop bots. Before going live:
+
+1. Create a free Cloudflare account and open **Turnstile** in the dashboard.
+2. **Add widget**: name it after the site, add your production domain (and
+   `localhost` if you want to test real keys locally), mode "Managed".
+3. Copy the **site key** into `TURNSTILE_SITE_KEY` and the **secret key**
+   into `TURNSTILE_SECRET_KEY` in Vercel (Project → Settings → Environment
+   Variables), then redeploy.
+4. In the admin, **Inbox settings** should now say "Cloudflare Turnstile
+   (live keys)".
+
+With live keys the token is verified on the server and the form **fails
+closed**: if Cloudflare can't be reached, the visitor is asked to try again.
+
+### Setting up Resend (email notices)
+
+1. Create a Resend account and **add your domain**; add the DNS records it
+   shows at your domain registrar and wait until the domain is verified.
+2. Create an **API key** (sending access only).
+3. Set `RESEND_API_KEY`, `RESEND_FROM_EMAIL` (an address on the verified
+   domain) and optionally `CONTACT_TO_EMAIL` in Vercel, then redeploy.
+4. **Inbox settings** should say "Resend configured".
+
+The email only says that something new arrived and links to the admin
+inbox. It never contains the name, email address, subject or text.
 
 ## Admin guide (for non-technical owners and editors)
 
@@ -200,9 +242,26 @@ email, password and authenticator code.
   one first. "Reset 2FA" makes an editor set up their authenticator app again
   (use it when they change phones). "Set temporary password" helps an editor
   who forgot theirs; share it in person or by phone.
-- **Inbox**: prayer requests and messages are private. Only share them with
-  people the sender agreed to, and never copy them into public posts unless
-  the sender gave sharing consent. (The public forms arrive in Phase 6.)
+- **Inbox**: prayer requests (from the Prayer page) and messages (from the
+  Contact page) are private. Only share them with people the sender agreed
+  to, and never copy them into public posts.
+  - Open an item to read it, change its **status** (for example "Prayed" or
+    "Read") and keep a **private note** that only admins see.
+  - **Publishing**: only possible when the sender ticked the sharing box
+    (for messages: only testimonies). Write a short public version and
+    remove names, places, contact details and anything that identifies the
+    person, then tick the confirmation and press "Publish public version".
+    Only that text appears in "Prayers and testimonies shared with
+    permission" on the Prayer page; the original stays private. The site
+    also refuses text that still contains an email address, a phone number
+    or the sender's name.
+  - **Unpublish** at once if someone withdraws their consent.
+  - **Delete** removes the item and its public version for good.
+- **Inbox settings** (owner only): how many months prayer requests and
+  messages are kept (default 12), and **Delete old items**, which removes
+  everything older than that. Nothing is deleted automatically, so purge
+  regularly, for example once a month. The page also shows whether spam
+  protection and email notices are configured.
 - **Audit log** (owner only): who changed what and when.
 - **Lockout**: after 5 wrong passwords or codes, sign-in pauses for 15
   minutes.
@@ -263,6 +322,20 @@ email, password and authenticator code.
   overwrites the header with the real client IP. On other hosts (or a bare
   `next start` exposed directly) a client can rotate the header; the
   per-account lockout still caps password guessing.
+- Public forms go through one pipeline (`src/server/forms/public-submission.ts`):
+  honeypot, Zod validation and sanitization, a rate limit per form and per
+  hashed network address (`sha256(AUTH_SECRET + ip)`; the raw IP is never
+  stored or logged, and attempt records are deleted after 24 hours), then the
+  server-side Turnstile check, then storage. The same `x-forwarded-for`
+  trust note as above applies.
+- Prayer requests are visible only to signed-in admins; the public prayer
+  wall reads only the separate, admin-edited `PublicShare` table, and only
+  consented items can be published. Anonymous requests never store a name
+  or email (cleared on the server too). Logs and email notices never
+  contain names, emails, subjects or message text.
+- Phase 9's Content-Security-Policy must allow
+  `https://challenges.cloudflare.com` in `script-src` and `frame-src`
+  (Turnstile).
 
 ## Project structure
 
@@ -331,6 +404,9 @@ ivory/white is about 2.7:1, so it is decorative only.
   been verified" (it changes the donation wording in the Terms).
 - Phase 9's Content-Security-Policy must allow
   `frame-src https://www.youtube-nocookie.com` for the video player.
+- Set real Turnstile and Resend keys (see above) and check **Inbox
+  settings** shows "live keys" and "Resend configured". Re-read the Privacy
+  Policy against how the forms actually handle data.
 - Replace all demo content and untick "Demo site".
 - Have a native speaker review the Nepali text (including the Phase 3
   strings and the Nepali legal templates).
@@ -342,7 +418,7 @@ ivory/white is about 2.7:1, so it is decorative only.
 3. Core public pages (About, Devotionals, Missions, Media, Privacy, Terms) ✅
 4. Database and content with Prisma + Neon Postgres ✅
 5. Auth and admin: one OWNER plus up to 3 EDITOR accounts ✅
-6. Prayer request and contact forms (Zod validation, Cloudflare Turnstile, email notifications via Resend)
+6. Prayer request and contact forms (Zod validation, Cloudflare Turnstile, email notifications via Resend) ✅
 7. Picture and video uploads to Vercel Blob (replaces the link fields)
 8. Donations in USD with Stripe (no tax-status claims until verified)
 9. Hardening (full CSP, recovery codes) and deployment to Vercel

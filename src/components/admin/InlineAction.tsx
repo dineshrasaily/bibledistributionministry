@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState } from "react";
 import { Button, type ButtonVariant } from "@/components/ui/Button";
 import type { ActionResult } from "@/server/actions/run-admin-action";
 import type { FormAction } from "./FormShell";
@@ -27,21 +27,21 @@ export function InlineAction({
   accessibleLabel?: string;
   variant?: ButtonVariant;
 }) {
-  const [state, formAction, pending] = useActionState<
-    ActionResult<unknown> | null,
-    FormData
-  >(action as unknown as StateAction, null);
   const toast = useToast();
   const router = useRouter();
-  const handled = useRef<typeof state>(null);
-
-  useEffect(() => {
-    if (!state || handled.current === state) return;
-    handled.current = state;
-    if (state.ok) toast.show(state.message);
-    else if (state.code === "UNAUTHENTICATED") router.push("/admin/login");
-    else toast.show(state.formError ?? "Something went wrong.", "error");
-  }, [state, toast, router]);
+  // The toast is shown from the action wrapper, not an effect: a successful
+  // action may unmount this button (e.g. "Unpublish" disappears once the
+  // refreshed page has nothing to unpublish), and the toast must still show.
+  const [, formAction, pending] = useActionState<
+    ActionResult<unknown> | null,
+    FormData
+  >(async (prev, formData) => {
+    const result = await (action as unknown as StateAction)(prev, formData);
+    if (result.ok) toast.show(result.message);
+    else if (result.code === "UNAUTHENTICATED") router.push("/admin/login");
+    else toast.show(result.formError ?? "Something went wrong.", "error");
+    return result;
+  }, null);
 
   return (
     <form action={formAction}>

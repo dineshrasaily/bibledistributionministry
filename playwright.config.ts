@@ -68,6 +68,11 @@ export default defineConfig({
         "admin-logout.spec.ts",
         "admin-screenshots.spec.ts",
         "admin-settings.spec.ts",
+        // Phase 6 (they write inbox rows; admin-readonly asserts an empty inbox)
+        "prayer-form.spec.ts",
+        "contact-form.spec.ts",
+        "admin-inbox.spec.ts",
+        "phase6-screenshots.spec.ts",
       ],
       dependencies: ["public", "admin-readonly"],
       fullyParallel: false,
@@ -87,6 +92,13 @@ export default defineConfig({
       DIRECT_URL: MISSION_TEST_URL,
       AUTH_SECRET: authSecret,
       TOTP_ENCRYPTION_KEY: totpKey,
+      // Every E2E request comes from localhost: don't let the form limit
+      // (default 5/hour) throttle the suite. DB tests prove the limit itself.
+      FORM_RATE_LIMIT_PER_HOUR: "100",
+      // Cloudflare's test keys + no email in E2E, whatever the shell has set.
+      TURNSTILE_SITE_KEY: "",
+      TURNSTILE_SECRET_KEY: "",
+      RESEND_API_KEY: "",
     },
   },
 });

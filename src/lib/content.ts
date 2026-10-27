@@ -30,6 +30,10 @@ import {
 } from "./content-mappers";
 import { prisma } from "./db";
 import { ilike, paginate, type Page } from "./pagination";
+import {
+  toPublicShareView,
+  type PublicShareView,
+} from "./public-share-mappers";
 import { SLUG_RE } from "./validation/common";
 import {
   PUBLIC_POST_PAGE_SIZE,
@@ -50,6 +54,7 @@ export type {
   VerseView,
 } from "./content-mappers";
 export type { Page } from "./pagination";
+export type { PublicShareView } from "./public-share-mappers";
 
 const categoriesInclude = {
   categories: {
@@ -373,6 +378,33 @@ export async function getMediaCenter(locale: AppLocale): Promise<MediaCenter> {
     .slice(0, MEDIA_SECTION_LIMIT)
     .map((g) => ({ ...g, items: g.items.slice(0, MEDIA_SECTION_LIMIT * 2) }));
   return center;
+}
+
+// ---------- Prayer wall ----------
+
+/**
+ * Admin-published public versions of consented prayers and testimonies.
+ * Reads ONLY the PublicShare table with an explicit select: never the
+ * private PrayerRequest / ContactMessage rows (no include, no relations).
+ */
+export async function listPublicShares(
+  locale: AppLocale,
+  limit = 12,
+): Promise<PublicShareView[]> {
+  const rows = await prisma.publicShare.findMany({
+    orderBy: [{ publishedAt: "desc" }, { id: "asc" }],
+    take: limit,
+    select: {
+      id: true,
+      kind: true,
+      textEn: true,
+      textNe: true,
+      publishedAt: true,
+    },
+  });
+  return rows
+    .map((row) => toPublicShareView(row, locale))
+    .filter((v): v is PublicShareView => v !== null);
 }
 
 // ---------- Sitemap / static params ----------

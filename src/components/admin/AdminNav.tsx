@@ -23,6 +23,7 @@ const INBOX: NavItem[] = [
 // Hiding these for editors is cosmetic; the pages enforce requireOwnerPage.
 const OWNER: NavItem[] = [
   { href: "/admin/settings", label: "Settings" },
+  { href: "/admin/inbox/settings", label: "Inbox settings" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/audit", label: "Audit log" },
 ];

@@ -14,13 +14,36 @@ import {
 import { form } from "@/test/forms";
 import {
   countNewInbox,
+  deleteContactMessage,
+  deletePrayerRequest,
   getContactMessage,
   getPrayerRequest,
   listContactMessages,
   listPrayerRequests,
+  previewPurge,
+  publishPrayer,
+  publishTestimony,
+  purgeOldInbox,
+  setMessageNote,
   setMessageStatus,
+  setPrayerNote,
   setPrayerStatus,
+  unpublishPrayer,
+  unpublishTestimony,
 } from "./inbox";
+
+const fakeActor = {
+  id: "nobody",
+  email: "nobody@example.org",
+  name: "Nobody",
+  role: "OWNER" as const,
+};
+const share = (id: string) => ({
+  id,
+  textEn: "Pray for peace.",
+  textNe: null,
+  confirmNoPersonalInfo: true,
+});
 
 beforeEach(async () => {
   await resetDb();
@@ -40,6 +63,16 @@ describe("inbox service", () => {
       countNewInbox(),
       setPrayerStatus(prisma, { id: prayer.id, status: "PRAYED" }),
       setMessageStatus(prisma, { id: message.id, status: "READ" }),
+      setPrayerNote(prisma, { id: prayer.id, adminNote: "x" }),
+      setMessageNote(prisma, { id: message.id, adminNote: "x" }),
+      deletePrayerRequest(prisma, { id: prayer.id }),
+      deleteContactMessage(prisma, { id: message.id }),
+      publishPrayer(prisma, share(prayer.id), fakeActor),
+      publishTestimony(prisma, share(message.id), fakeActor),
+      unpublishPrayer(prisma, { id: prayer.id }),
+      unpublishTestimony(prisma, { id: message.id }),
+      purgeOldInbox(prisma),
+      previewPurge(),
     ];
     for (const call of calls) {
       const error = await call.catch((e: unknown) => e);

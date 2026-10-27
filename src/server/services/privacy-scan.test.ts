@@ -10,7 +10,11 @@ import { describe, expect, it } from "vitest";
 const ROOT = process.cwd();
 const INBOX = path.join(ROOT, "src/server/services/inbox.ts");
 const SELF = path.join(ROOT, "src/server/services/privacy-scan.test.ts");
+const SUBMIT = path.join(ROOT, "src/server/services/inbox-submit.ts");
+// Delegates (prisma.prayerRequest) and relation keys in include/select
+// (`prayerRequest: { select ... }`), so nothing can join back to private rows.
 const DELEGATE_RE = /\.(prayerRequest|contactMessage)\b/;
+const RELATION_KEY_RE = /\b(prayerRequest|contactMessage)\s*:/;
 
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -26,6 +30,7 @@ const isAllowed = (file: string) => {
   const rel = path.relative(ROOT, file).replaceAll("\\", "/");
   return (
     file === INBOX ||
+    file === SUBMIT ||
     file === SELF ||
     rel.startsWith("src/test/") ||
     /^prisma\/seed[^/]*\.ts$/.test(rel)
@@ -39,10 +44,30 @@ describe("inbox privacy scan", () => {
       ...walk(path.join(ROOT, "prisma")),
       ...walk(path.join(ROOT, "scripts")),
     ];
-    const offenders = files.filter(
-      (f) => !isAllowed(f) && DELEGATE_RE.test(readFileSync(f, "utf8")),
-    );
+    const offenders = files.filter((f) => {
+      if (isAllowed(f)) return false;
+      const source = readFileSync(f, "utf8");
+      return DELEGATE_RE.test(source) || RELATION_KEY_RE.test(source);
+    });
     expect(offenders).toEqual([]);
+  });
+
+  it("inbox-submit.ts only creates rows and exports the two create functions", () => {
+    const source = readFileSync(SUBMIT, "utf8");
+    const calls = [
+      ...source.matchAll(/\.(prayerRequest|contactMessage)\.(\w+)\(/g),
+    ].map((m) => m[2]);
+    expect(calls).toEqual(["create", "create"]);
+    expect(source).not.toMatch(
+      /\.(findMany|findFirst|findUnique|update|updateMany|upsert|delete|deleteMany|count|aggregate|groupBy)\w*\(/,
+    );
+    const exports = [
+      ...source.matchAll(/^export\s+(?:async\s+)?(\w+)\s+(\w+)/gm),
+    ];
+    expect(exports.map((m) => m[2]).sort()).toEqual([
+      "createContactMessage",
+      "createPrayerRequest",
+    ]);
   });
 
   it("every exported function in inbox.ts calls requireAdmin() first", () => {

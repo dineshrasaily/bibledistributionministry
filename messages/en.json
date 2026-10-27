@@ -24,7 +24,7 @@
     },
     "prayer": {
       "title": "Prayer",
-      "description": "Share a prayer request with {name}. This page is coming in a later phase."
+      "description": "Send a private prayer request to {name}, by name or anonymously."
     },
     "support": {
       "title": "Support the Mission",
@@ -32,7 +32,7 @@
     },
     "contact": {
       "title": "Contact",
-      "description": "Get in touch with {name}. This page is coming in a later phase."
+      "description": "Get in touch with {name}: questions, testimonies and offers to volunteer."
     },
     "privacy": {
       "title": "Privacy Policy",
@@ -290,5 +290,96 @@
     "templateNotice": "This text is a template. Have it reviewed by a qualified professional before relying on it.",
     "lastUpdated": "Last updated",
     "contents": "On this page"
+  },
+  "PrayerPage": {
+    "eyebrow": "Prayer",
+    "title": "Share a prayer request",
+    "intro": "Tell us what you would like prayer for. Your request is private, and you can send it without your name.",
+    "formSection": "Prayer request form",
+    "asideTitle": "How we handle your request",
+    "asidePoints": {
+      "private": "Your request is private. Only the ministry's small admin team can read it.",
+      "anonymous": "You can send it anonymously. Then we don't keep a name or email address.",
+      "consent": "Nothing is shown publicly unless you tick the sharing box, and even then only a shortened version without personal details."
+    },
+    "wallEyebrow": "Shared with permission",
+    "wallTitle": "Prayers and testimonies shared with permission",
+    "wallIntro": "Shortened versions, with personal details removed, of requests and testimonies whose senders agreed to share them.",
+    "sharedOn": "Shared {date}"
+  },
+  "PublicShareKinds": {
+    "PRAYER": "Prayer",
+    "TESTIMONY": "Testimony"
+  },
+  "PrayerForm": {
+    "formLabel": "Prayer request",
+    "anonymousLabel": "Send anonymously",
+    "anonymousHint": "Your name and email are cleared and not sent. We won't be able to reply.",
+    "nameLabel": "Your name",
+    "emailLabel": "Your email",
+    "emailHint": "Only if you would like a reply.",
+    "bodyLabel": "Your prayer request",
+    "bodyHint": "Up to {max} characters.",
+    "consentLabel": "You may share a shortened version of my request publicly, without my name or contact details.",
+    "consentHint": "Optional. Leave unticked to keep your request private.",
+    "privacyNotice": "We use your request only to pray for you and, if you asked, to reply. Read our <link>privacy policy</link>.",
+    "submit": "Send prayer request",
+    "successTitle": "Thank you",
+    "successBody": "Your request was received and is kept private."
+  },
+  "ContactPage": {
+    "eyebrow": "Contact",
+    "title": "Get in touch",
+    "intro": "Send a question, share a testimony or offer to volunteer.",
+    "formSection": "Contact form",
+    "asideTitle": "Other ways to reach us",
+    "asideBody": "Messages are read by the ministry's small admin team and kept private.",
+    "emailAside": "Prefer email? Write to"
+  },
+  "ContactForm": {
+    "formLabel": "Contact",
+    "nameLabel": "Your name",
+    "emailLabel": "Your email",
+    "emailHint": "We use it only to reply to you.",
+    "kindLabel": "What is this about?",
+    "kinds": {
+      "GENERAL": "General question",
+      "TESTIMONY": "Testimony",
+      "VOLUNTEER": "Volunteering"
+    },
+    "volunteerHint": "See upcoming events on the <link>missions page</link>.",
+    "subjectLabel": "Subject",
+    "messageLabel": "Message",
+    "messageHint": "Up to {max} characters.",
+    "consentLabel": "You may share a shortened version of my testimony publicly, without my name or contact details.",
+    "consentHint": "Optional. Leave unticked to keep your testimony private.",
+    "privacyNotice": "We use your details only to reply to you. Read our <link>privacy policy</link>.",
+    "submit": "Send message",
+    "successTitle": "Thank you",
+    "successBody": "Your message was received."
+  },
+  "Forms": {
+    "required": "required",
+    "optional": "optional",
+    "sending": "Sending…",
+    "sendAnother": "Send another",
+    "honeypotLabel": "Leave this field empty"
+  },
+  "FormErrors": {
+    "required": "Please fill in this field.",
+    "tooLong": "Please use at most {max} characters.",
+    "invalidEmail": "Enter a valid email address, for example name@example.com.",
+    "invalidOption": "Choose one of the options.",
+    "turnstileMissing": "Please wait for the spam check to finish, then send again.",
+    "turnstile": "The spam check failed. Please try again.",
+    "turnstileUnavailable": "The spam check is not available right now. Please try again in a few minutes.",
+    "turnstileLoadFailed": "The spam check could not load. Check your connection and reload the page.",
+    "rateLimited": "You have sent several messages in a short time. Please try again later.",
+    "generic": "Something went wrong and your message was not sent. Please try again.",
+    "fixFields": "Please fix the highlighted fields."
+  },
+  "Turnstile": {
+    "label": "Spam check",
+    "loading": "Checking that you're not a robot…"
   }
 }

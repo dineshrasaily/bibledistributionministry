@@ -101,7 +101,12 @@ test.describe("signed out", () => {
 test.describe("as an editor", () => {
   test.use({ storageState: EDITOR_STATE });
 
-  for (const path of ["/admin/settings", "/admin/users", "/admin/audit"]) {
+  for (const path of [
+    "/admin/settings",
+    "/admin/users",
+    "/admin/audit",
+    "/admin/inbox/settings",
+  ]) {
     test(`GET ${path} is a server redirect to /admin/forbidden (AC14)`, async ({
       request,
       page,
@@ -132,9 +137,14 @@ test.describe("as an editor", () => {
     await page.goto("/admin");
     const nav = page.getByRole("navigation", { name: "Admin" });
     await expect(nav.getByRole("link", { name: "Posts" })).toBeVisible();
-    await expect(nav.getByRole("link", { name: "Settings" })).toHaveCount(0);
+    await expect(
+      nav.getByRole("link", { name: "Settings", exact: true }),
+    ).toHaveCount(0);
     await expect(nav.getByRole("link", { name: "Users" })).toHaveCount(0);
     await expect(nav.getByRole("link", { name: "Audit log" })).toHaveCount(0);
+    await expect(nav.getByRole("link", { name: "Inbox settings" })).toHaveCount(
+      0,
+    );
   });
 });
 
@@ -146,7 +156,9 @@ test.describe("as the owner", () => {
   }) => {
     await page.goto("/admin");
     const nav = page.getByRole("navigation", { name: "Admin" });
-    await expect(nav.getByRole("link", { name: "Settings" })).toBeVisible();
+    await expect(
+      nav.getByRole("link", { name: "Settings", exact: true }),
+    ).toBeVisible();
     await expect(nav.getByRole("link", { name: "Users" })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Audit log" })).toBeVisible();
   });
@@ -190,7 +202,9 @@ test.describe("as the owner", () => {
     // Empty inbox shows the launch note.
     await page.goto("/admin/inbox/prayer");
     await expect(
-      page.getByText("They will appear here when the prayer form launches."),
+      page.getByText(
+        "They will appear here when someone sends the prayer form.",
+      ),
     ).toBeVisible();
     // The media editor is honest about uploads.
     await page.goto("/admin/media/new");

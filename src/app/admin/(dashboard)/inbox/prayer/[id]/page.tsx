@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { DetailList } from "@/components/admin/DetailList";
 import { EditorSection } from "@/components/admin/EditorSection";
+import { InboxNoteForm } from "@/components/admin/InboxNoteForm";
 import { InboxStatusForm } from "@/components/admin/InboxStatusForm";
 import {
   formatDateTime,
@@ -12,8 +14,16 @@ import {
 } from "@/components/admin/labels";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { ConsentBadge, PrivacyNotice } from "@/components/admin/PrivacyNotice";
+import { PublishShareForm } from "@/components/admin/PublishShareForm";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { setPrayerStatusAction } from "@/server/actions/inbox";
+import { NO_CONSENT_MSG } from "@/lib/validation/inbox";
+import {
+  deletePrayerAction,
+  publishPrayerAction,
+  setPrayerNoteAction,
+  setPrayerStatusAction,
+  unpublishPrayerAction,
+} from "@/server/actions/inbox";
 import { requireAdminPage } from "@/server/auth/guards";
 import { getPrayerRequest } from "@/server/services/inbox";
 
@@ -66,6 +76,7 @@ export default async function PrayerRequestPage({
           />
           <p
             lang={request.locale ?? undefined}
+            data-testid="inbox-body"
             className="rounded-md bg-beige/40 p-4 whitespace-pre-wrap text-navy"
           >
             {request.body}
@@ -79,6 +90,43 @@ export default async function PrayerRequestPage({
             options={optionsOf(PRAYER_STATUS_LABELS)}
           />
         </EditorSection>
+        <EditorSection title="Private note">
+          <InboxNoteForm
+            action={setPrayerNoteAction}
+            id={request.id}
+            note={request.adminNote}
+          />
+        </EditorSection>
+        <EditorSection title="Public version">
+          {request.shareConsent ? (
+            <PublishShareForm
+              publishAction={publishPrayerAction}
+              unpublishAction={unpublishPrayerAction}
+              id={request.id}
+              share={request.publicShare}
+              originalText={request.body}
+              originalLocale={request.locale}
+              kindLabel="prayer request"
+            />
+          ) : (
+            <p
+              role="note"
+              data-testid="no-consent-note"
+              className="rounded-md border border-beige bg-ivory px-4 py-3 text-navy"
+            >
+              {NO_CONSENT_MSG}
+            </p>
+          )}
+        </EditorSection>
+      </div>
+      <div className="mt-8 flex justify-end">
+        <ConfirmDialog
+          action={deletePrayerAction}
+          fields={{ id: request.id }}
+          triggerLabel="Delete this prayer request"
+          title="Delete this prayer request?"
+          description="This permanently deletes the request and any public version. This can't be undone."
+        />
       </div>
     </>
   );

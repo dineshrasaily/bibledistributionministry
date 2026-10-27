@@ -22,6 +22,12 @@ const SELF_GUARDED = new Set([
   "previewMarkdownAction",
   "changePasswordAction",
 ]);
+/** Public form actions: no session, but always the spam-protected pipeline. */
+const PUBLIC_ACTIONS = new Set(["submitPrayerAction", "submitContactAction"]);
+const PUBLIC_PIPELINE = path.join(
+  ROOT,
+  "src/server/forms/public-submission.ts",
+);
 
 const read = (file: string) => readFileSync(file, "utf8");
 const sourceFiles = (dir: string) =>
@@ -63,6 +69,11 @@ describe("server action guard coverage", () => {
           expect(body, name).toContain("requireAdmin(");
           continue;
         }
+        if (PUBLIC_ACTIONS.has(name)) {
+          expect(file, name).toBe("public-forms.ts");
+          expect(body, name).toContain("runPublicSubmission(");
+          continue;
+        }
         expect(body, name).toContain("runAdminAction(");
       }
     },
@@ -72,6 +83,19 @@ describe("server action guard coverage", () => {
     const source = read(path.join(ACTIONS_DIR, WRAPPER));
     expect(source).toContain('import "server-only"');
     expect(source).not.toContain('"use server"');
+  });
+
+  it("public-submission.ts is server-only and not a server action file", () => {
+    const source = read(PUBLIC_PIPELINE);
+    expect(source).toContain('import "server-only"');
+    expect(source).not.toContain('"use server"');
+  });
+
+  it("public-forms.ts exports only the two public actions", () => {
+    const fns = exportedFunctions(
+      read(path.join(ACTIONS_DIR, "public-forms.ts")),
+    ).map((f) => f.name);
+    expect(fns.sort()).toEqual([...PUBLIC_ACTIONS].sort());
   });
 
   it("services and the wrapper never redirect", () => {

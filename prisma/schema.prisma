@@ -81,6 +81,16 @@ enum ChallengePurpose {
   ENROLL
 }
 
+enum FormKind {
+  PRAYER
+  CONTACT
+}
+
+enum PublicShareKind {
+  PRAYER
+  TESTIMONY
+}
+
 // ---------- settings ----------
 model SiteSettings {
   id                    String   @id @default("singleton")
@@ -110,6 +120,7 @@ model SiteSettings {
   donationsEnabled      Boolean  @default(false)
   taxDeductibleVerified Boolean  @default(false) // OWNER only; stored for future wording
   isDemo                Boolean  @default(true) // drives site-wide DemoBanner + hero/intro DemoBadge
+  inboxRetentionMonths  Int      @default(12) // 1..60 (Zod), OWNER only; used by the manual purge
   updatedAt             DateTime @updatedAt
 }
 
@@ -131,9 +142,10 @@ model AdminUser {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  posts      Post[]
-  auditLogs  AuditLog[]
-  challenges LoginChallenge[]
+  posts        Post[]
+  auditLogs    AuditLog[]
+  challenges   LoginChallenge[]
+  publicShares PublicShare[]
 
   @@index([role, isActive])
 }
@@ -312,6 +324,8 @@ model PrayerRequest {
   shareConsent Boolean      @default(false)
   status       PrayerStatus @default(NEW)
   locale       String? // "en" | "ne", set by the Phase 6 form
+  adminNote    String? // private, admin only
+  publicShare  PublicShare?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -328,8 +342,40 @@ model ContactMessage {
   shareConsent Boolean       @default(false)
   status       MessageStatus @default(NEW)
   locale       String?
+  adminNote    String? // private, admin only
+  publicShare  PublicShare?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
   @@index([status, createdAt])
+}
+
+/// Admin-edited public version of a consented prayer request or testimony.
+/// The only inbox-derived table public pages read (never the private rows).
+model PublicShare {
+  id               String          @id @default(cuid())
+  kind             PublicShareKind
+  textEn           String?
+  textNe           String?
+  prayerRequestId  String?         @unique
+  prayerRequest    PrayerRequest?  @relation(fields: [prayerRequestId], references: [id], onDelete: Cascade)
+  contactMessageId String?         @unique
+  contactMessage   ContactMessage? @relation(fields: [contactMessageId], references: [id], onDelete: Cascade)
+  publishedById    String?
+  publishedBy      AdminUser?      @relation(fields: [publishedById], references: [id], onDelete: SetNull)
+  publishedAt      DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([publishedAt])
+}
+
+/// Public form rate limit (per form, per hashed IP; never the raw IP).
+model FormSubmissionAttempt {
+  id        String   @id @default(cuid())
+  form      FormKind
+  ipHash    String // sha256(AUTH_SECRET + ip)
+  createdAt DateTime @default(now())
+
+  @@index([form, ipHash, createdAt])
+  @@index([createdAt])
 }
