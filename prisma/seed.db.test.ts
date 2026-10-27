@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { demoCategories } from "@/content/demo/categories";
 import { demoEvents } from "@/content/demo/events";
 import { demoMedia } from "@/content/demo/media";
 import { demoPosts } from "@/content/demo/posts";
@@ -21,10 +22,58 @@ describe("seedDemoContent", () => {
       posts: 6,
       events: 4,
       verses: 3,
-      media: 3,
+      media: 9,
+      categories: 2,
       settings: 1,
     });
     expect(second).toEqual(first);
+    expect(await prisma.postCategory.count()).toBe(5);
+  });
+
+  it("links the demo gallery photos to the past gathering, in order", async () => {
+    await seedDemoContent(prisma);
+    const photos = await prisma.mediaItem.findMany({
+      where: { eventId: "event-4" },
+      orderBy: { sortOrder: "asc" },
+    });
+    expect(photos.map((p) => p.id)).toEqual([
+      "media-photo-1",
+      "media-photo-2",
+      "media-photo-3",
+    ]);
+    for (const p of photos) {
+      expect(p.type).toBe("IMAGE");
+      expect(p.url).toMatch(/^\/demo\/gallery\/sample-\d\.svg$/);
+      expect(p.altTextEn).toMatch(/placeholder/i);
+    }
+    const audio = await prisma.mediaItem.findUniqueOrThrow({
+      where: { id: "media-5" },
+    });
+    expect(audio.type).toBe("AUDIO");
+    expect(audio.url).toBe("/demo/audio/sample-silence.wav");
+    const worship = await prisma.mediaItem.findUniqueOrThrow({
+      where: { id: "media-4" },
+    });
+    expect(worship.category).toBe("WORSHIP");
+    // No seeded video is attributed to a real YouTube upload.
+    expect(
+      await prisma.mediaItem.count({ where: { embedUrl: { not: null } } }),
+    ).toBe(0);
+  });
+
+  it("does not overwrite an edited body or category links on re-seed", async () => {
+    await seedDemoContent(prisma);
+    await prisma.post.update({
+      where: { id: "post-4" },
+      data: { bodyEn: "Edited body", categories: { deleteMany: {} } },
+    });
+    await seedDemoContent(prisma);
+    const post = await prisma.post.findUniqueOrThrow({
+      where: { id: "post-4" },
+      include: { categories: true },
+    });
+    expect(post.bodyEn).toBe("Edited body");
+    expect(post.categories).toHaveLength(0);
   });
 
   it("never overwrites admin edits on re-seed", async () => {
@@ -68,6 +117,9 @@ describe("seedDemoContent", () => {
     expect(sortedIds(events)).toEqual(sortedIds([...demoEvents]));
     expect(sortedIds(verses)).toEqual(sortedIds([...demoVerses]));
     expect(sortedIds(media)).toEqual(sortedIds([...demoMedia]));
+    expect(sortedIds(await prisma.category.findMany())).toEqual(
+      sortedIds([...demoCategories]),
+    );
   });
 
   it("stores Devanagari text intact (UTF-8 database)", async () => {

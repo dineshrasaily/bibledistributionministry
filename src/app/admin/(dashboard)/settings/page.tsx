@@ -17,6 +17,9 @@ import { getSettingsForEdit, socialUrlsOf } from "@/server/services/settings";
 
 export const metadata: Metadata = { title: "Site settings" };
 
+const ABOUT_HINT =
+  "Empty sections are hidden on the public site (sample text is shown while Demo site is on).";
+
 const PLATFORMS = Object.entries(SOCIAL_PLATFORMS) as [
   SocialPlatform,
   string,
@@ -62,7 +65,7 @@ async function SettingsForm() {
           name="isDemo"
           label="Demo site (shows demo badges and the demo banner)"
           defaultChecked={s.isDemo}
-          hint='The footer copyright still says "Demonstration site." until the About content is written.'
+          hint='While this is on, the footer copyright says "Demonstration site." and empty About sections show sample text.'
         />
       </EditorSection>
 
@@ -86,14 +89,14 @@ async function SettingsForm() {
         </div>
       </EditorSection>
 
-      <EditorSection title="Messages">
+      <EditorSection title="Home page">
         <BilingualField
           name="tagline"
           label="Tagline"
           maxLength={120}
           defaultEn={s.taglineEn}
           defaultNe={s.taglineNe}
-          hint="The small line above the ministry name on the home page."
+          hint="The small line above the ministry name on the home page. Also shown under the About page title."
         />
         <BilingualField
           name="missionStatement"
@@ -103,16 +106,54 @@ async function SettingsForm() {
           maxLength={600}
           defaultEn={s.missionStatementEn}
           defaultNe={s.missionStatementNe}
+          hint="Shown on the home page and as a large quote on the About page."
         />
+      </EditorSection>
+
+      <EditorSection title="About page">
+        <p className="text-sm text-navy/80">{ABOUT_HINT}</p>
         <BilingualField
           name="aboutIntro"
-          label="About introduction"
+          label="About introduction / our story"
           multiline
           rows={5}
           maxLength={3000}
           defaultEn={s.aboutIntroEn}
           defaultNe={s.aboutIntroNe}
-          hint="Separate paragraphs with an empty line."
+          hint="Shown on the home page and in the About page story section. Separate paragraphs with an empty line."
+        />
+        {/* TODO(Phase 7): replace with an image upload / library picker. */}
+        <TextField
+          name="aboutImageUrl"
+          label="Photo link (optional)"
+          type="text"
+          inputMode="url"
+          defaultValue={s.aboutImageUrl ?? ""}
+          placeholder="https://"
+          hint="Paste an image link (https://...) or a site path such as /brand/logo-full.png. Uploading arrives in a later update."
+        />
+        <BilingualField
+          name="aboutImageAlt"
+          label="Photo description"
+          maxLength={300}
+          defaultEn={s.aboutImageAltEn}
+          defaultNe={s.aboutImageAltNe}
+          hint="Required when a photo link is set: describe the photo for people who can't see it."
+        />
+        <MarkdownEditor
+          name="testimonyEn"
+          label="Testimony / faith journey (English)"
+          lang="en"
+          rows={6}
+          defaultValue={s.testimonyEn}
+        />
+        <MarkdownEditor
+          name="testimonyNe"
+          label="Testimony / faith journey (नेपाली, Nepali)"
+          lang="ne"
+          rows={6}
+          defaultValue={s.testimonyNe}
+          hint="Leave empty to show the English text."
         />
         <MarkdownEditor
           name="visionEn"
@@ -157,6 +198,21 @@ async function SettingsForm() {
           lang="ne"
           rows={5}
           defaultValue={s.statementOfFaithNe}
+          hint="Leave empty to show the English text."
+        />
+        <MarkdownEditor
+          name="goalsEn"
+          label="Goals and outreach (English)"
+          lang="en"
+          rows={5}
+          defaultValue={s.goalsEn}
+        />
+        <MarkdownEditor
+          name="goalsNe"
+          label="Goals and outreach (नेपाली, Nepali)"
+          lang="ne"
+          rows={5}
+          defaultValue={s.goalsNe}
           hint="Leave empty to show the English text."
         />
       </EditorSection>

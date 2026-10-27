@@ -10,12 +10,25 @@ import { getSiteSettings } from "./site-settings";
  * Open Graph and Twitter tags. URLs are relative to `metadataBase`
  * (set from NEXT_PUBLIC_SITE_URL in the locale layout).
  */
+export type OpenGraphExtras = {
+  type?: "website" | "article";
+  /** ISO date-times (articles). */
+  publishedTime?: string;
+  modifiedTime?: string;
+  /** Absolute URLs or site paths (resolved against metadataBase). */
+  images?: string[];
+};
+
 export function buildPageMetadata({
   locale,
   path,
   title,
   description,
   siteName,
+  type = "website",
+  publishedTime,
+  modifiedTime,
+  images,
 }: {
   locale: AppLocale;
   /** Locale-less path, e.g. "/" or "/about". */
@@ -23,7 +36,7 @@ export function buildPageMetadata({
   title: string;
   description: string;
   siteName: string;
-}): Metadata {
+} & OpenGraphExtras): Metadata {
   const canonical = localizedHref(locale, path);
   const languages: Record<string, string> = Object.fromEntries(
     routing.locales.map((l) => [l, localizedHref(l, path)]),
@@ -31,23 +44,61 @@ export function buildPageMetadata({
   languages["x-default"] = localizedHref(routing.defaultLocale, path);
   const ogLocale = (l: AppLocale) => (l === "ne" ? "ne_NP" : "en_US");
 
+  const hasImages = images !== undefined && images.length > 0;
+  const common = {
+    siteName,
+    title,
+    description,
+    url: canonical,
+    locale: ogLocale(locale),
+    alternateLocale: routing.locales.filter((l) => l !== locale).map(ogLocale),
+    ...(hasImages ? { images } : {}),
+  };
+
   return {
     title,
     description,
     alternates: { canonical, languages },
-    openGraph: {
-      type: "website",
-      siteName,
+    openGraph:
+      type === "article"
+        ? {
+            ...common,
+            type: "article",
+            ...(publishedTime ? { publishedTime } : {}),
+            ...(modifiedTime ? { modifiedTime } : {}),
+          }
+        : { ...common, type: "website" },
+    twitter: {
+      card: hasImages ? "summary_large_image" : "summary",
       title,
       description,
-      url: canonical,
-      locale: ogLocale(locale),
-      alternateLocale: routing.locales
-        .filter((l) => l !== locale)
-        .map(ogLocale),
+      ...(hasImages ? { images } : {}),
     },
-    twitter: { card: "summary", title, description },
   };
+}
+
+/** `generateMetadata` body for detail pages (posts, events). */
+export async function localizedDetailMetadata({
+  locale,
+  path,
+  title,
+  description,
+  ...og
+}: {
+  locale: AppLocale;
+  path: string;
+  title: string;
+  description: string;
+} & OpenGraphExtras): Promise<Metadata> {
+  const { ministryName: siteName } = await getSiteSettings();
+  return buildPageMetadata({
+    locale,
+    path,
+    title,
+    description,
+    siteName,
+    ...og,
+  });
 }
 
 export type PageKey =

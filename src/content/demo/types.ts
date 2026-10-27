@@ -19,7 +19,16 @@ export type DemoPost = {
   /** ISO 8601 date-time. */
   publishedAt: string;
   featured?: boolean;
+  /** Sample Markdown body. Bible quotes only in English (WEB) with the reference. */
+  body?: LocalizedText;
+  categoryIds?: string[];
   isDemo: true;
+};
+
+export type DemoCategory = {
+  id: string;
+  slug: string;
+  name: LocalizedText;
 };
 
 export type EventKind =
@@ -33,8 +42,16 @@ export type DemoEvent = {
   slug: string;
   /** ISO 8601 date-time. */
   startsAt: string;
+  /** ISO 8601 date-time. */
+  endsAt?: string;
   location: LocalizedText;
   status: EventStatus;
+  /** Markdown. */
+  description?: LocalizedText;
+  /** Markdown post-trip report. */
+  report?: LocalizedText;
+  /** Plain text, paragraphs separated by blank lines. */
+  volunteerInfo?: LocalizedText;
   isDemo: true;
 };
 
@@ -48,18 +65,27 @@ export type DemoVerse = {
   isDemo: true;
 };
 
-export type MediaKind = "SERMON" | "VIDEO" | "AUDIO";
+export type MediaKind = "SERMON" | "VIDEO" | "AUDIO" | "IMAGE";
 
 export type DemoMedia = {
   id: string;
   kind: MediaKind;
+  /** Overrides the category implied by `kind` (e.g. WORSHIP). */
+  category?: "SERMON" | "WORSHIP" | "PODCAST" | "GALLERY" | "GENERAL";
   title: LocalizedText;
   description: LocalizedText;
-  durationMinutes: number;
+  durationMinutes: number | null;
   /** ISO 8601 date-time. */
   publishedAt: string;
   featured?: boolean;
-  /** No uploads yet; the UI renders a placeholder thumbnail. */
-  thumbnailUrl: null;
+  /** No uploads yet; null renders a placeholder thumbnail. */
+  thumbnailUrl: string | null;
+  /** IMAGE / AUDIO: a site path under /demo/. */
+  url?: string;
+  /** IMAGE only. */
+  altText?: LocalizedText;
+  /** Links a photo to a demo event's gallery. */
+  eventId?: string;
+  sortOrder?: number;
   isDemo: true;
 };

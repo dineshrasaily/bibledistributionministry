@@ -70,12 +70,23 @@ export async function FeaturedContent({
                   : entry.item.excerpt;
               const href = localizedHref(
                 locale,
-                isMedia ? "/media" : "/devotionals",
+                entry.kind === "media"
+                  ? `/media#media-${entry.item.id}`
+                  : `/devotionals/${entry.item.slug}`,
               );
               return (
                 <li key={item.id} className="flex">
                   <Card as="article" className="w-full">
-                    {isMedia ? (
+                    {entry.kind === "media" && entry.item.thumbnailUrl ? (
+                      // TODO(Phase 7): next/image + Blob
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={entry.item.thumbnailUrl}
+                        alt=""
+                        loading="lazy"
+                        className="aspect-video w-full object-cover"
+                      />
+                    ) : isMedia ? (
                       <VideoPlaceholder label={tCommon("videoPlaceholder")} />
                     ) : (
                       <div

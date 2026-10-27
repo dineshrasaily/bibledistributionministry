@@ -25,8 +25,29 @@ const durationMinutes = z
   )
   .transform((v) => v ?? null);
 
+export const SORT_ORDER_MSG = "Enter a whole number from 0 to 9999.";
+
+const sortOrder = z.preprocess(
+  (v) => (v == null || (typeof v === "string" && v.trim() === "") ? 0 : v),
+  z.coerce
+    .number({ error: SORT_ORDER_MSG })
+    .int(SORT_ORDER_MSG)
+    .min(0, SORT_ORDER_MSG)
+    .max(9999, SORT_ORDER_MSG),
+);
+
+/** Optional linked mission/event; blank means none. */
+const eventId = z
+  .preprocess(
+    (v) => (v == null || (typeof v === "string" && v.trim() === "") ? null : v),
+    idSchema.nullable(),
+  )
+  .transform((v) => v ?? null);
+
 const commonFields = {
   category: enumOf(MediaCategory),
+  eventId,
+  sortOrder,
   titleEn: requiredText(160),
   titleNe: optionalText(160),
   descriptionEn: optionalText(1000),

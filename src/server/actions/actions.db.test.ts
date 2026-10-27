@@ -294,4 +294,92 @@ describe("AC24: posts mutations audit and revalidate", () => {
     });
     expect(revalidatePath).toHaveBeenCalledWith("/[locale]", "layout");
   });
+
+  it("OWNER saves the About page fields; the audit lists them as changed", async () => {
+    await seedDemoContent(prisma);
+    setTestSession(await makeOwner());
+    const result = await updateSiteSettingsAction(
+      null,
+      form({
+        ministryName: "Demo Ministry",
+        contactEmail: "hello@example.org",
+        isDemo: "on",
+        testimonyEn: "My **testimony**",
+        goalsNe: "लक्ष्य",
+        aboutImageUrl: "/brand/logo-full.png",
+        aboutImageAltEn: "The ministry logo",
+      }),
+    );
+    expect(result).toMatchObject({ ok: true });
+    const row = await prisma.siteSettings.findUniqueOrThrow({
+      where: { id: "singleton" },
+    });
+    expect(row.testimonyEn).toBe("My **testimony**");
+    expect(row.goalsNe).toBe("लक्ष्य");
+    expect(row.aboutImageAltEn).toBe("The ministry logo");
+    const [audit] = await prisma.auditLog.findMany();
+    const changed = (audit!.metadata as { changed: string[] }).changed;
+    expect(changed).toEqual(
+      expect.arrayContaining(["testimonyEn", "goalsNe", "aboutImageUrl"]),
+    );
+  });
+
+  it("an About photo without alt text is a field error and saves nothing", async () => {
+    await seedDemoContent(prisma);
+    setTestSession(await makeOwner());
+    const result = await updateSiteSettingsAction(
+      null,
+      form({
+        ministryName: "Demo Ministry",
+        contactEmail: "hello@example.org",
+        aboutImageUrl: "/brand/logo-full.png",
+      }),
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      code: "VALIDATION",
+      fieldErrors: { aboutImageAltEn: expect.any(String) },
+    });
+    expect(await auditCount()).toBe(0);
+  });
+});
+
+describe("media linked to an event", () => {
+  const mediaForm = (eventId: string) =>
+    form({
+      type: "IMAGE",
+      category: "GALLERY",
+      titleEn: "Linked photo",
+      url: "/demo/gallery/sample-1.svg",
+      altTextEn: "Sample placeholder",
+      eventId,
+      sortOrder: "4",
+      intent: "publish",
+    });
+
+  it("a nonexistent eventId is a VALIDATION field error and writes nothing", async () => {
+    setTestSession(await makeOwner());
+    const result = await createMediaAction(null, mediaForm("no-such-event"));
+    expect(result).toMatchObject({
+      ok: false,
+      code: "VALIDATION",
+      fieldErrors: { eventId: expect.stringMatching(/no longer exists/) },
+    });
+    expect(await prisma.mediaItem.count()).toBe(0);
+    expect(await auditCount()).toBe(0);
+  });
+
+  it("a valid eventId and order persist", async () => {
+    await seedDemoContent(prisma);
+    setTestSession(await makeEditor());
+    await expect(
+      createMediaAction(null, mediaForm("event-1")),
+    ).rejects.toBeInstanceOf(NavigationSignal);
+    const row = await prisma.mediaItem.findFirstOrThrow({
+      where: { titleEn: "Linked photo" },
+    });
+    expect(row.eventId).toBe("event-1");
+    expect(row.sortOrder).toBe(4);
+    expect(row.status).toBe("PUBLISHED");
+  });
 });

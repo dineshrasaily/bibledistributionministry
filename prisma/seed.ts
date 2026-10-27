@@ -15,7 +15,7 @@ async function main(): Promise<void> {
   try {
     const report = await seedDemoContent(prisma);
     console.log(
-      `Seed complete: ${report.posts} posts, ${report.events} events, ${report.verses} verses, ${report.media} media, ${report.settings} settings.`,
+      `Seed complete: ${report.posts} posts, ${report.events} events, ${report.verses} verses, ${report.media} media, ${report.categories} categories, ${report.settings} settings.`,
     );
   } finally {
     await prisma.$disconnect();

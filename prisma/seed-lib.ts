@@ -6,6 +6,7 @@
  * Pure module (used by prisma/seed.ts, DB tests and scripts/e2e-prepare.ts).
  */
 import { defaultSiteSettings } from "@/config/site";
+import { demoCategories } from "@/content/demo/categories";
 import { demoEvents } from "@/content/demo/events";
 import { demoMedia } from "@/content/demo/media";
 import { demoPosts } from "@/content/demo/posts";
@@ -19,6 +20,7 @@ export type SeedReport = {
   events: number;
   verses: number;
   media: number;
+  categories: number;
   settings: number;
 };
 
@@ -33,11 +35,25 @@ const MEDIA_KIND_MAP: Record<
   SERMON: { type: "VIDEO_EMBED", category: "SERMON" },
   VIDEO: { type: "VIDEO_EMBED", category: "GENERAL" },
   AUDIO: { type: "AUDIO", category: "PODCAST" },
+  IMAGE: { type: "IMAGE", category: "GALLERY" },
 };
 
 export async function seedDemoContent(
   prisma: PrismaClient,
 ): Promise<SeedReport> {
+  for (const category of demoCategories) {
+    await prisma.category.upsert({
+      where: { id: category.id },
+      update: {},
+      create: {
+        id: category.id,
+        slug: category.slug,
+        nameEn: category.name.en,
+        nameNe: category.name.ne,
+      },
+    });
+  }
+
   for (const post of demoPosts) {
     await prisma.post.upsert({
       where: { id: post.id },
@@ -50,13 +66,23 @@ export async function seedDemoContent(
         titleNe: post.title.ne,
         excerptEn: post.excerpt.en,
         excerptNe: post.excerpt.ne,
-        bodyEn: "",
+        bodyEn: post.body?.en ?? "",
+        bodyNe: post.body?.ne ?? null,
         scriptureRefs: [...post.scriptureRefs],
         status: "PUBLISHED",
         publishedAt: new Date(post.publishedAt),
         isFeatured: post.featured ?? false,
         isDemo: true,
         authorId: null,
+        ...(post.categoryIds?.length
+          ? {
+              categories: {
+                createMany: {
+                  data: post.categoryIds.map((categoryId) => ({ categoryId })),
+                },
+              },
+            }
+          : {}),
       },
     });
   }
@@ -71,7 +97,14 @@ export async function seedDemoContent(
         slug: event.slug,
         titleEn: event.title.en,
         titleNe: event.title.ne,
+        descriptionEn: event.description?.en ?? null,
+        descriptionNe: event.description?.ne ?? null,
+        reportEn: event.report?.en ?? null,
+        reportNe: event.report?.ne ?? null,
+        volunteerInfoEn: event.volunteerInfo?.en ?? null,
+        volunteerInfoNe: event.volunteerInfo?.ne ?? null,
         startsAt: new Date(event.startsAt),
+        endsAt: event.endsAt ? new Date(event.endsAt) : null,
         locationEn: event.location.en,
         locationNe: event.location.ne,
         status: event.status,
@@ -99,24 +132,29 @@ export async function seedDemoContent(
   }
 
   for (const media of demoMedia) {
-    const { type, category } = MEDIA_KIND_MAP[media.kind];
+    const mapped = MEDIA_KIND_MAP[media.kind];
     await prisma.mediaItem.upsert({
       where: { id: media.id },
       update: {},
       create: {
         id: media.id,
-        type,
-        category,
+        type: mapped.type,
+        category: media.category ?? mapped.category,
         titleEn: media.title.en,
         titleNe: media.title.ne,
         descriptionEn: media.description.en,
         descriptionNe: media.description.ne,
-        url: null,
+        url: media.url ?? null,
+        // Never attribute a real YouTube video to the ministry.
         embedUrl: null,
+        altTextEn: media.altText?.en ?? null,
+        altTextNe: media.altText?.ne ?? null,
         thumbnailUrl: media.thumbnailUrl,
         durationMinutes: media.durationMinutes,
         publishedAt: new Date(media.publishedAt),
         isFeatured: media.featured ?? false,
+        eventId: media.eventId ?? null,
+        sortOrder: media.sortOrder ?? 0,
         status: "PUBLISHED",
         isDemo: true,
       },
@@ -129,12 +167,14 @@ export async function seedDemoContent(
     create: { id: "singleton", ...defaultSiteSettings },
   });
 
-  const [posts, events, verses, media, settings] = await Promise.all([
-    prisma.post.count(),
-    prisma.event.count(),
-    prisma.bibleVerse.count(),
-    prisma.mediaItem.count(),
-    prisma.siteSettings.count(),
-  ]);
-  return { posts, events, verses, media, settings };
+  const [posts, events, verses, media, categories, settings] =
+    await Promise.all([
+      prisma.post.count(),
+      prisma.event.count(),
+      prisma.bibleVerse.count(),
+      prisma.mediaItem.count(),
+      prisma.category.count(),
+      prisma.siteSettings.count(),
+    ]);
+  return { posts, events, verses, media, categories, settings };
 }

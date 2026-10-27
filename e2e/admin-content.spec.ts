@@ -77,6 +77,50 @@ test("validation errors show a summary and keep the entered values", async ({
   );
 });
 
+test("a photo linked to an event appears in its gallery, then is deleted", async ({
+  page,
+}) => {
+  const photoTitle = `E2E linked photo ${stamp}`;
+  await page.goto("/admin/media/new");
+  await page.getByLabel(/^Media type/).selectOption("IMAGE");
+  await page.getByLabel(/^Image link/).fill("/demo/gallery/sample-4.svg");
+  await page
+    .getByLabel(/Image description \(alt text\) \(English\)/)
+    .fill("E2E sample placeholder");
+  await page.getByLabel(/^Category/).selectOption("GALLERY");
+  const eventSelect = page.getByLabel("Linked mission/event (optional)");
+  await expect(
+    eventSelect.locator("option", {
+      hasText: "Sample mission trip to a village community",
+    }),
+  ).toHaveCount(1);
+  await eventSelect.selectOption("event-1");
+  await page.getByLabel("Order in gallery").fill("1");
+  await page.getByLabel(/Title \(English\)/).fill(photoTitle);
+  await page.getByRole("button", { name: "Publish", exact: true }).click();
+  // Wait for the redirect away from /admin/media/new (the create finished).
+  await expect(page).toHaveURL(/\/admin\/media\/(?!new\b)[a-z0-9]+/);
+  await expect(page.getByTestId("toasts")).toContainText("Created.");
+  const editorUrl = page.url();
+
+  await page.goto("/en/missions/sample-mission-trip");
+  await expect(
+    page.getByRole("button", { name: "Open photo: E2E sample placeholder" }),
+  ).toBeVisible();
+
+  await page.goto(editorUrl);
+  await page.getByRole("button", { name: "Delete media" }).click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Delete" })
+    .click();
+  await expect(page).toHaveURL(/\/admin\/media(\?|$)/);
+  await page.goto("/en/missions/sample-mission-trip");
+  await expect(
+    page.getByRole("button", { name: "Open photo: E2E sample placeholder" }),
+  ).toHaveCount(0);
+});
+
 test("unpublishing from the list removes the update from /en", async ({
   page,
 }) => {

@@ -1,25 +1,26 @@
 {
   "Metadata": {
     "siteDescription": "A bilingual demonstration website for a personal Christian ministry. All content shown is sample content.",
+    "siteDescriptionPlain": "{name}: devotionals, Bible resources, mission news and prayer, in English and Nepali.",
     "home": {
       "title": "Home",
       "description": "Welcome to {name}, a demonstration site for a personal Christian ministry sharing devotionals, ministry updates and mission news."
     },
     "about": {
       "title": "About",
-      "description": "Learn about the vision and heart behind {name}. This page is coming in a later phase."
+      "description": "The story, vision, values and statement of faith of {name}."
     },
     "devotionals": {
       "title": "Devotionals",
-      "description": "Devotionals and Bible studies from {name}. This page is coming in a later phase."
+      "description": "Devotionals, articles and Bible studies from {name}, with Scripture references and a verse of the day."
     },
     "missions": {
       "title": "Missions",
-      "description": "Mission trips, outreach and events from {name}. This page is coming in a later phase."
+      "description": "Upcoming and completed mission trips, outreach and events from {name}."
     },
     "media": {
       "title": "Media",
-      "description": "Sermons, videos and audio from {name}. This page is coming in a later phase."
+      "description": "Sermons, worship, podcasts, videos and photo galleries from {name}."
     },
     "prayer": {
       "title": "Prayer",
@@ -35,11 +36,11 @@
     },
     "privacy": {
       "title": "Privacy Policy",
-      "description": "How {name} handles personal information. This page is coming in a later phase."
+      "description": "How {name} collects, uses and protects personal information."
     },
     "terms": {
       "title": "Terms of Use",
-      "description": "Terms for using the {name} website. This page is coming in a later phase."
+      "description": "The terms for using the {name} website."
     },
     "notFound": {
       "title": "Page not found",
@@ -152,6 +153,142 @@
     "socialHeading": "Follow",
     "placeholder": "(placeholder)",
     "legalHeading": "Legal",
-    "copyright": "© {year} {name}. Demonstration site."
+    "copyright": "© {year} {name}. Demonstration site.",
+    "copyrightPlain": "© {year} {name}."
+  },
+  "About": {
+    "eyebrow": "About the ministry",
+    "title": "Our story and calling",
+    "intro": "Who we are, what we believe and where we hope to serve.",
+    "story": "Our story",
+    "testimony": "Testimony and faith journey",
+    "mission": "Our mission",
+    "vision": "Vision",
+    "values": "Values",
+    "statementOfFaith": "Statement of faith",
+    "goals": "Goals and outreach",
+    "photoPanelLabel": "Scripture · Prayer · Service",
+    "englishOnly": "This section is shown in English until a Nepali version is added.",
+    "ctaTitle": "Pray with us and see the work",
+    "ctaBody": "Read about upcoming and past missions, or share a prayer request.",
+    "ctaMissions": "See our missions",
+    "ctaPrayer": "Share a prayer request",
+    "demo": {
+      "story": "Sample text: the story of how the ministry began will be written here by the ministry itself.",
+      "testimony": "Sample text: the founder's own testimony and faith journey will be written here. Nothing is invented on their behalf.",
+      "mission": "Sample text: the ministry's mission statement will be written here.",
+      "vision": "Sample text: the ministry's vision will be written here.",
+      "values": "Sample text: the values that guide the ministry will be listed here.",
+      "statementOfFaith": "Sample text: the ministry's statement of faith will be written here, in its own words.",
+      "goals": "Sample text: the ministry's goals and outreach plans will be described here."
+    }
+  },
+  "Devotionals": {
+    "eyebrow": "Devotionals and Bible resources",
+    "title": "Read, reflect and pray",
+    "description": "Devotionals, articles and Bible studies. Search or filter to find what you need.",
+    "filtersHeading": "Search and filter",
+    "searchLabel": "Search",
+    "searchPlaceholder": "Search titles and text",
+    "typeLabel": "Type",
+    "allTypes": "All types",
+    "categoryLabel": "Category",
+    "allCategories": "All categories",
+    "apply": "Apply",
+    "clear": "Clear filters",
+    "resultsHeading": "Results",
+    "resultsCount": "{count, plural, =0 {No results} one {# result} other {# results}}",
+    "emptyTitle": "Nothing published yet",
+    "emptyDescription": "Devotionals and Bible studies will appear here once they are published.",
+    "noMatchTitle": "No matches",
+    "noMatchDescription": "Nothing matches these filters. Try other words or clear the filters."
+  },
+  "PostDetail": {
+    "backToList": "Back to devotionals",
+    "publishedOn": "Published",
+    "scriptureHeading": "Scripture",
+    "scriptureNoteNe": "A Nepali translation will be added later; the English text is shown for now.",
+    "englishOnlyNote": "This text is shown in English until a Nepali version is added.",
+    "categories": "Categories",
+    "shareHeading": "Share"
+  },
+  "Share": {
+    "copyLink": "Copy link",
+    "copied": "Link copied",
+    "copyFailed": "Couldn't copy the link. Copy it from the address bar instead.",
+    "facebook": "Facebook",
+    "x": "X",
+    "whatsapp": "WhatsApp",
+    "email": "Email",
+    "opensInNewTab": "(opens in a new tab)"
+  },
+  "Pagination": {
+    "label": "Pagination",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {count}"
+  },
+  "Missions": {
+    "eyebrow": "Where we serve",
+    "title": "Missions",
+    "description": "Upcoming mission trips and outreach, and reports from past events.",
+    "upcomingTitle": "Upcoming",
+    "completedTitle": "Completed",
+    "upcomingEmptyTitle": "No upcoming events",
+    "upcomingEmptyDescription": "Upcoming mission trips and events will be listed here.",
+    "completedEmptyTitle": "No completed events yet",
+    "completedEmptyDescription": "Reports from past missions will appear here.",
+    "viewDetails": "View details"
+  },
+  "EventDetail": {
+    "backToList": "Back to missions",
+    "when": "When",
+    "where": "Where",
+    "about": "About this event",
+    "volunteer": "How to take part",
+    "volunteerContact": "Get in touch",
+    "report": "Trip report",
+    "gallery": "Photo gallery",
+    "galleryEmpty": "Photos will be added after the event.",
+    "cancelledNotice": "This event was cancelled.",
+    "ctaPrayer": "Pray for this mission"
+  },
+  "EventStatuses": {
+    "UPCOMING": "Upcoming",
+    "COMPLETED": "Completed",
+    "CANCELLED": "Cancelled"
+  },
+  "MediaCenter": {
+    "eyebrow": "Media center",
+    "title": "Watch, listen and see",
+    "description": "Sermons, worship, podcasts, videos and photos from the ministry.",
+    "sermons": "Sermons",
+    "worship": "Worship",
+    "audio": "Podcasts and audio",
+    "videos": "Videos",
+    "galleries": "Photo galleries",
+    "otherPhotos": "Other photos",
+    "emptySection": "Nothing here yet. New items will appear once they are published.",
+    "audioUnavailable": "Audio coming soon.",
+    "videoUnavailable": "Video coming soon",
+    "fromEvent": "From: {title}"
+  },
+  "Video": {
+    "play": "Play video: {title}",
+    "privacyNote": "Videos play from YouTube in privacy-enhanced mode. Nothing loads from YouTube until you press play."
+  },
+  "Lightbox": {
+    "open": "Open photo: {alt}",
+    "close": "Close",
+    "previous": "Previous photo",
+    "next": "Next photo",
+    "counter": "Photo {current} of {total}",
+    "hint": "Use the arrow keys to move between photos."
+  },
+  "Legal": {
+    "templateLabel": "Template",
+    "templateNotice": "This text is a template. Have it reviewed by a qualified professional before relying on it.",
+    "lastUpdated": "Last updated",
+    "contents": "On this page"
   }
 }

@@ -72,6 +72,15 @@ export function getEvent(id: string) {
   return prisma.event.findUnique({ where: { id } });
 }
 
+/** Options for the media editor's "Linked mission/event" select. */
+export function listEventOptions() {
+  return prisma.event.findMany({
+    select: { id: true, titleEn: true, startsAt: true },
+    orderBy: [{ startsAt: "desc" }, { id: "asc" }],
+    take: 200,
+  });
+}
+
 function publishFor(intent: EventInput["intent"]): ContentStatus {
   return intent === "publish" ? "PUBLISHED" : "DRAFT";
 }

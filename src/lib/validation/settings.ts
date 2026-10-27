@@ -10,6 +10,8 @@ import {
 } from "./common";
 
 export const SOCIAL_URL_MSG = "Enter a full link starting with https://";
+export const ABOUT_IMAGE_ALT_MSG =
+  "Describe the photo for people who can't see it.";
 
 const platformKeys = Object.keys(SOCIAL_PLATFORMS) as SocialPlatform[];
 
@@ -48,12 +50,28 @@ export const settingsSchema = z
     statementOfFaithNe: optionalMarkdown(10_000),
     aboutIntroEn: optionalText(3000),
     aboutIntroNe: optionalText(3000),
+    testimonyEn: optionalMarkdown(10_000),
+    testimonyNe: optionalMarkdown(10_000),
+    goalsEn: optionalMarkdown(10_000),
+    goalsNe: optionalMarkdown(10_000),
+    aboutImageUrl: optionalSafeUrl(),
+    aboutImageAltEn: optionalText(300),
+    aboutImageAltNe: optionalText(300),
     logoUrl: optionalSafeUrl(),
     contactEmail: emailSchema,
     donationsEnabled: checkbox(),
     taxDeductibleVerified: checkbox(),
     isDemo: checkbox(),
     ...socialShape,
+  })
+  .superRefine((input, ctx) => {
+    if (input.aboutImageUrl && !input.aboutImageAltEn) {
+      ctx.addIssue({
+        code: "custom",
+        message: ABOUT_IMAGE_ALT_MSG,
+        path: ["aboutImageAltEn"],
+      });
+    }
   })
   .transform((input) => {
     const socialLinks: { platform: SocialPlatform; url: string }[] = [];

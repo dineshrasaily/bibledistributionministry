@@ -106,7 +106,12 @@ export async function Footer({ locale }: { locale: AppLocale }) {
 
       <div className="border-t border-white/10">
         <Container className="flex flex-col gap-3 py-6 text-sm sm:flex-row sm:items-center sm:justify-between">
-          <p>{t("copyright", { year, name: site.name })}</p>
+          <p>
+            {t(site.isDemo ? "copyright" : "copyrightPlain", {
+              year,
+              name: site.name,
+            })}
+          </p>
           <nav aria-label={t("legalHeading")}>
             <ul className="flex gap-5">
               {legalNav.map((item) => (

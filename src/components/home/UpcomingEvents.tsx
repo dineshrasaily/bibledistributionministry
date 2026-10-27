@@ -87,7 +87,10 @@ export async function UpcomingEvents({
                           <DemoBadge label={tCommon("demoBadge")} />
                         ) : null}
                         <Link
-                          href={localizedHref(locale, "/missions")}
+                          href={localizedHref(
+                            locale,
+                            `/missions/${event.slug}`,
+                          )}
                           className="rounded-sm text-sm font-semibold text-navy underline decoration-gold decoration-1 underline-offset-4 hover:decoration-2"
                         >
                           {tCommon("eventDetails")}

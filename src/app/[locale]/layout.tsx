@@ -30,12 +30,14 @@ export async function generateMetadata({
   if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: "Metadata" });
   const site = getSiteConfig();
-  const { ministryName: name } = await getSiteSettings();
+  const { ministryName: name, isDemo } = await getSiteSettings();
 
   return {
     metadataBase: new URL(site.siteUrl),
     title: { default: name, template: `%s | ${name}` },
-    description: t("siteDescription"),
+    description: isDemo
+      ? t("siteDescription")
+      : t("siteDescriptionPlain", { name }),
     applicationName: name,
   };
 }

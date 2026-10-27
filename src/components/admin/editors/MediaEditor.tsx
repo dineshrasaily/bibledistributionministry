@@ -15,7 +15,14 @@ import type { MediaItem } from "@/generated/prisma/client";
 import { createMediaAction, updateMediaAction } from "@/server/actions/media";
 
 /** Create / edit form for a media item (image, audio or YouTube link). */
-export function MediaEditor({ media }: { media?: MediaItem }) {
+export function MediaEditor({
+  media,
+  events,
+}: {
+  media?: MediaItem;
+  /** Options for the linked mission/event select. */
+  events: { id: string; label: string }[];
+}) {
   return (
     <FormShell
       action={media ? updateMediaAction : createMediaAction}
@@ -38,6 +45,27 @@ export function MediaEditor({ media }: { media?: MediaItem }) {
           options={optionsOf(MEDIA_CATEGORY_LABELS)}
           defaultValue={media?.category ?? "GENERAL"}
           required
+        />
+        {/* TODO(Phase 7): proper galleries (create, order, link to an event). */}
+        <SelectField
+          name="eventId"
+          label="Linked mission/event (optional)"
+          options={[
+            { value: "", label: "None" },
+            ...events.map((e) => ({ value: e.id, label: e.label })),
+          ]}
+          defaultValue={media?.eventId ?? ""}
+          hint="Photos linked to an event appear in its gallery on the Missions page."
+        />
+        <TextField
+          name="sortOrder"
+          label="Order in gallery"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          max={9999}
+          defaultValue={media?.sortOrder ?? 0}
+          hint="Lower numbers come first."
         />
       </EditorSection>
 

@@ -1,8 +1,12 @@
 import type { MetadataRoute } from "next";
 import { getSiteConfig } from "@/config/site";
-import { routing } from "@/i18n/routing";
+import { getPublishedSlugs } from "@/lib/content";
+import { buildSitemap } from "@/lib/sitemap-entries";
 
-const routes = [
+// Picks up newly published posts/events without a redeploy.
+export const revalidate = 3600;
+
+const STATIC_ROUTES = [
   "",
   "/about",
   "/devotionals",
@@ -13,21 +17,18 @@ const routes = [
   "/contact",
   "/privacy",
   "/terms",
-];
+] as const;
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl = getSiteConfig().siteUrl.replace(/\/$/, "");
-  const lastModified = new Date();
-
-  return routes.flatMap((route) =>
-    routing.locales.map((locale) => ({
-      url: `${siteUrl}/${locale}${route}`,
-      lastModified,
-      alternates: {
-        languages: Object.fromEntries(
-          routing.locales.map((l) => [l, `${siteUrl}/${l}${route}`]),
-        ),
-      },
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const { posts, events } = await getPublishedSlugs();
+  return buildSitemap(getSiteConfig().siteUrl, STATIC_ROUTES, [
+    ...posts.map((p) => ({
+      path: `/devotionals/${p.slug}`,
+      lastModified: p.updatedAt,
     })),
-  );
+    ...events.map((e) => ({
+      path: `/missions/${e.slug}`,
+      lastModified: e.updatedAt,
+    })),
+  ]);
 }

@@ -3,7 +3,8 @@ import { changePasswordSchema } from "./account";
 import { loginStep1Schema, totpCodeSchema } from "./auth";
 import { prayerStatusSchema } from "./inbox";
 import { parseListQuery } from "./list-query";
-import { settingsSchema } from "./settings";
+import { mediaSchema, SORT_ORDER_MSG } from "./media";
+import { ABOUT_IMAGE_ALT_MSG, settingsSchema } from "./settings";
 import { createEditorSchema, setUserActiveSchema } from "./users";
 
 const validSettings = {
@@ -57,6 +58,88 @@ describe("settingsSchema", () => {
       settingsSchema.safeParse({ ...validSettings, contactEmail: "nope" })
         .success,
     ).toBe(false);
+  });
+
+  it("requires English alt text when an About photo is set", () => {
+    const result = settingsSchema.safeParse({
+      ...validSettings,
+      aboutImageUrl: "/brand/logo-full.png",
+      aboutImageAltEn: "  ",
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual(["aboutImageAltEn"]);
+    expect(result.error?.issues[0]?.message).toBe(ABOUT_IMAGE_ALT_MSG);
+    const ok = settingsSchema.parse({
+      ...validSettings,
+      aboutImageUrl: "/brand/logo-full.png",
+      aboutImageAltEn: "The ministry logo",
+    });
+    expect(ok.aboutImageUrl).toBe("/brand/logo-full.png");
+    expect(ok.aboutImageAltNe).toBeNull();
+  });
+
+  it("rejects an unsafe About photo link", () => {
+    for (const url of ["javascript:alert(1)", "http://example.org/a.jpg"]) {
+      const result = settingsSchema.safeParse({
+        ...validSettings,
+        aboutImageUrl: url,
+        aboutImageAltEn: "Alt",
+      });
+      expect(result.success, url).toBe(false);
+      expect(result.error?.issues[0]?.path).toEqual(["aboutImageUrl"]);
+    }
+  });
+
+  it("limits testimony length and keeps blank About sections as null", () => {
+    expect(
+      settingsSchema.safeParse({
+        ...validSettings,
+        testimonyEn: "x".repeat(10_001),
+      }).success,
+    ).toBe(false);
+    const parsed = settingsSchema.parse({
+      ...validSettings,
+      testimonyEn: "My **story**",
+      goalsNe: "   ",
+    });
+    expect(parsed.testimonyEn).toBe("My **story**");
+    expect(parsed.goalsNe).toBeNull();
+    expect(parsed.aboutImageUrl).toBeNull();
+  });
+});
+
+describe("media eventId and sortOrder", () => {
+  const base = {
+    type: "AUDIO",
+    category: "PODCAST",
+    titleEn: "Episode",
+    url: "/demo/audio/sample-silence.wav",
+    intent: "draft",
+  };
+
+  it("treats a blank event as none and a blank order as 0", () => {
+    const parsed = mediaSchema.parse({ ...base, eventId: "", sortOrder: "" });
+    expect(parsed.eventId).toBeNull();
+    expect(parsed.sortOrder).toBe(0);
+    expect(mediaSchema.parse(base).eventId).toBeNull();
+  });
+
+  it("accepts a valid id and rejects an invalid one", () => {
+    expect(mediaSchema.parse({ ...base, eventId: "event-4" }).eventId).toBe(
+      "event-4",
+    );
+    const bad = mediaSchema.safeParse({ ...base, eventId: "Bad Id!" });
+    expect(bad.success).toBe(false);
+    expect(bad.error?.issues[0]?.path).toEqual(["eventId"]);
+  });
+
+  it("bounds sortOrder to whole numbers 0-9999", () => {
+    expect(mediaSchema.parse({ ...base, sortOrder: "12" }).sortOrder).toBe(12);
+    for (const value of ["-1", "10000", "1.5", "abc"]) {
+      const result = mediaSchema.safeParse({ ...base, sortOrder: value });
+      expect(result.success, value).toBe(false);
+      expect(result.error?.issues[0]?.message).toBe(SORT_ORDER_MSG);
+    }
   });
 });
 

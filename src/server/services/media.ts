@@ -7,6 +7,7 @@ import type {
 } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/db";
 import { PAGE_SIZE } from "@/lib/validation/list-query";
+import { DomainError } from "@/server/errors";
 import type {
   MediaInput,
   MediaStatusInput,
@@ -96,9 +97,24 @@ function typeColumns(input: MediaInput) {
   }
 }
 
+export const EVENT_GONE_MSG =
+  "The selected event no longer exists. Refresh and try again.";
+
+/** A linked event must exist (avoids the generic P2003 category message). */
+async function assertEventExists(tx: Tx, eventId: string | null) {
+  if (eventId == null) return;
+  const event = await tx.event.findUnique({
+    where: { id: eventId },
+    select: { id: true },
+  });
+  if (!event) throw new DomainError("VALIDATION", EVENT_GONE_MSG, "eventId");
+}
+
 function commonColumns(input: MediaInput) {
   return {
     category: input.category,
+    eventId: input.eventId,
+    sortOrder: input.sortOrder,
     titleEn: input.titleEn,
     titleNe: input.titleNe,
     descriptionEn: input.descriptionEn,
@@ -116,6 +132,7 @@ export async function createMedia(
   tx: Tx,
   input: MediaInput,
 ): Promise<ServiceResult<{ id: string }>> {
+  await assertEventExists(tx, input.eventId);
   const data = {
     ...commonColumns(input),
     ...typeColumns(input),
@@ -137,6 +154,7 @@ export async function updateMedia(
   const existing = await tx.mediaItem.findUniqueOrThrow({
     where: { id: input.id },
   });
+  await assertEventExists(tx, input.eventId);
   const data = {
     ...commonColumns(input),
     ...typeColumns(input),

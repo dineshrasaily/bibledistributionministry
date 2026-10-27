@@ -20,6 +20,12 @@ const PUBLIC_SPECS = [
   "navigation.spec.ts",
   "routing.spec.ts",
   "screenshots.spec.ts",
+  // Phase 3
+  "public-pages.spec.ts",
+  "devotionals.spec.ts",
+  "missions.spec.ts",
+  "media-center.spec.ts",
+  "phase3-screenshots.spec.ts",
 ];
 
 export default defineConfig({

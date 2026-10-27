@@ -97,6 +97,13 @@ model SiteSettings {
   statementOfFaithNe    String?
   aboutIntroEn          String? // plain text, paragraphs separated by blank lines
   aboutIntroNe          String?
+  testimonyEn           String? // Markdown, faith journey (About page)
+  testimonyNe           String?
+  goalsEn               String? // Markdown, goals and outreach (About page)
+  goalsNe               String?
+  aboutImageUrl         String? // https URL or site path. TODO(Phase 7): Vercel Blob upload
+  aboutImageAltEn       String? // plain text; required when aboutImageUrl is set (Zod)
+  aboutImageAltNe       String?
   logoUrl               String? // TODO(Phase 7): Vercel Blob upload
   contactEmail          String
   socialLinks           Json     @default("[]") // SocialLink[] validated by Zod
@@ -259,6 +266,7 @@ model Event {
   publishStatus   ContentStatus @default(DRAFT) // visibility
   coverImageUrl   String? // TODO(Phase 7)
   isDemo          Boolean       @default(false)
+  media           MediaItem[] // linked photo gallery (MediaItem.eventId)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -283,11 +291,15 @@ model MediaItem {
   isFeatured      Boolean       @default(false)
   status          ContentStatus @default(DRAFT)
   isDemo          Boolean       @default(false)
+  eventId         String? // optional link to a mission/event gallery. TODO(Phase 7): Gallery model
+  event           Event?        @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  sortOrder       Int           @default(0) // order inside the linked gallery
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
   @@index([status, isFeatured, publishedAt])
   @@index([status, category, publishedAt])
+  @@index([eventId, status, sortOrder])
 }
 
 // ---------- inbox (Phase 6 writes, Phase 5 reads) ----------

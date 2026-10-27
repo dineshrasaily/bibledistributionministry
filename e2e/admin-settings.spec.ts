@@ -30,6 +30,50 @@ test("changing the ministry name updates the public header (AC10)", async ({
   await expect(headerBrand(page)).toContainText("Demo Ministry");
 });
 
+async function setTestimony(page: Page, text: string) {
+  await page.goto("/admin/settings");
+  await page
+    .getByLabel("Testimony / faith journey (English)", { exact: true })
+    .fill(text);
+  await page.getByRole("button", { name: "Save settings" }).click();
+  await expect(page.getByTestId("toasts")).toContainText("Settings saved.");
+}
+
+test("the About testimony saved in Settings replaces the sample text", async ({
+  page,
+}) => {
+  try {
+    await setTestimony(page, "E2E testimony text");
+    await page.goto("/en/about");
+    const section = page.getByTestId("about-testimony");
+    await expect(section).toContainText("E2E testimony text");
+    await expect(section.locator("[data-demo-badge]")).toHaveCount(0);
+    // Nepali pages fall back to the English text, marked lang="en".
+    await page.goto("/ne/about");
+    await expect(
+      page.getByTestId("about-testimony").locator('[lang="en"]'),
+    ).toContainText("E2E testimony text");
+  } finally {
+    await setTestimony(page, "");
+  }
+  await page.goto("/en/about");
+  await expect(page.getByTestId("about-testimony")).toContainText(
+    "Sample text:",
+  );
+});
+
+test("an About photo link without a description is a field error", async ({
+  page,
+}) => {
+  await page.goto("/admin/settings");
+  await page.getByLabel(/^Photo link/).fill("/brand/logo-full.png");
+  await page.getByRole("button", { name: "Save settings" }).click();
+  await expect(page.getByTestId("form-error-summary")).toBeVisible();
+  await expect(
+    page.getByLabel("Photo description (English)", { exact: true }),
+  ).toHaveAttribute("aria-invalid", "true");
+});
+
 test("an invalid social link is rejected with a field error", async ({
   page,
 }) => {

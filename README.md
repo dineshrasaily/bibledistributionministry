@@ -12,7 +12,9 @@ wording until the ministry's legal status has been verified.
 
 1. Design system ✅
 2. Layout + home page ✅
-3. Core pages (About, Devotionals, …): placeholders for now
+3. Core public pages (About, Devotionals + detail, Missions + detail, Media
+   Center, Privacy, Terms) ✅ (Prayer, Support and Contact are placeholders
+   until Phases 6 and 8)
 4. Database-backed content (Prisma 7 + PostgreSQL) ✅
 5. Secure admin (password + authenticator app, owner + max 3 editors) ✅
 
@@ -176,10 +178,24 @@ email, password and authenticator code.
 - **Pictures and videos**: uploading pictures and videos arrives in a later
   update. For now, paste an image link or a YouTube link into the link
   fields (the hint under each field says the same).
+  - **YouTube** videos play in privacy-enhanced mode (youtube-nocookie.com)
+    and nothing loads from YouTube until a visitor presses play.
+  - **Audio** links play in the browser's own audio player on the Media page.
+  - **Photo galleries**: on an image, choose "Linked mission/event" to show
+    it in that event's gallery on its Missions page; "Order in gallery"
+    sorts the photos (lower numbers first). Unlinked photos appear under
+    "Other photos" on the Media page.
 - **Settings** (owner only): ministry name, logo link, contact email, social
-  links and the home-page text. Unticking "Demo site" hides the demo badges
-  and banner; the footer copyright still says "Demonstration site." until the
-  About content is written in Phase 3.
+  links, the home-page text and the **About page** (story, optional photo
+  with a required description, testimony, vision, values, statement of
+  faith, goals). Empty About sections are hidden; while "Demo site" is ticked
+  they show clearly marked sample text instead. Unticking "Demo site" also
+  hides the demo badges and banner and drops "Demonstration site." from the
+  footer copyright.
+- **Optional demo samples**: `npm run db:seed` adds the Phase 3 sample
+  content (post bodies, categories, gallery placeholders, a silent audio
+  sample) to a local database. It only creates missing rows and never
+  overwrites your edits; existing demo posts keep their current text.
 - **Users** (owner only): add up to **3 editors**. To add a fourth, deactivate
   one first. "Reset 2FA" makes an editor set up their authenticator app again
   (use it when they change phones). "Set temporary password" helps an editor
@@ -305,11 +321,25 @@ navy 4.9:1, navy on gold (gold button) 4.9:1, dark gold on ivory 4.7:1, dark
 gold on white 5.0:1, white on red-700 (delete buttons) about 6.5:1. Gold on
 ivory/white is about 2.7:1, so it is decorative only.
 
+## Go-live checklist (so far)
+
+- Have the Privacy Policy and Terms templates reviewed by a qualified
+  professional; re-check them after Phase 6 (forms) and Phase 8 (donations).
+  The privacy text names the one visitor cookie (next-intl's session-only
+  `NEXT_LOCALE` language preference); an E2E test keeps that true.
+- Confirm the ministry's tax status before ticking "Donation tax status has
+  been verified" (it changes the donation wording in the Terms).
+- Phase 9's Content-Security-Policy must allow
+  `frame-src https://www.youtube-nocookie.com` for the video player.
+- Replace all demo content and untick "Demo site".
+- Have a native speaker review the Nepali text (including the Phase 3
+  strings and the Nepali legal templates).
+
 ## Roadmap
 
 1. Design system ✅
 2. Layout + home page ✅
-3. Core pages (About, Devotionals, Missions, Media, Prayer, Support, Contact)
+3. Core public pages (About, Devotionals, Missions, Media, Privacy, Terms) ✅
 4. Database and content with Prisma + Neon Postgres ✅
 5. Auth and admin: one OWNER plus up to 3 EDITOR accounts ✅
 6. Prayer request and contact forms (Zod validation, Cloudflare Turnstile, email notifications via Resend)
