@@ -7,6 +7,7 @@ import { resetDb } from "@/test/db-setup";
 import {
   makeCategory,
   makeEvent,
+  makeGallery,
   makeMedia,
   makePost,
   makeVerse,
@@ -363,8 +364,17 @@ describe("missions", () => {
     expect(await getPublishedEventBySlug("nope", "en")).toBeNull();
   });
 
-  it("the gallery holds only published images of that event, in order", async () => {
+  // Phase 7: rewritten for the Gallery model (was MediaItem.eventId).
+  it("the gallery holds only published photos of published linked galleries, in order", async () => {
     const event = await makeEvent();
+    const gallery = await makeGallery({
+      eventId: event.id,
+      status: "PUBLISHED",
+    });
+    const draftGallery = await makeGallery({
+      eventId: event.id,
+      status: "DRAFT",
+    });
     const image = (data: Parameters<typeof makeMedia>[0]) =>
       makeMedia({
         type: "IMAGE",
@@ -373,42 +383,53 @@ describe("missions", () => {
         altTextEn: "Alt",
         embedUrl: null,
         isFeatured: false,
-        eventId: event.id,
+        galleryId: gallery.id,
         ...data,
       });
     const second = await image({ sortOrder: 2 });
     const first = await image({ sortOrder: 1 });
     await image({ sortOrder: 0, status: "DRAFT" });
-    await image({ sortOrder: 0, eventId: null });
-    await makeMedia({ eventId: event.id, isFeatured: false }); // a video
+    await image({ sortOrder: 0, galleryId: null });
+    await image({ sortOrder: 0, galleryId: draftGallery.id });
+    await makeMedia({ galleryId: gallery.id, isFeatured: false }); // a video
 
     const detail = await getPublishedEventBySlug(event.slug, "en");
     expect(detail!.gallery.map((m) => m.id)).toEqual([first.id, second.id]);
 
     const demo = await getPublishedEventBySlug("sample-past-gathering", "en");
-    expect(demo!.gallery).toHaveLength(3);
+    expect(demo!.gallery.map((m) => m.id)).toEqual([
+      "media-photo-1",
+      "media-photo-2",
+      "media-photo-3",
+    ]);
     expect(demo!.report?.text).toMatch(/Sample trip report/);
   });
 
-  it("deleting an event unlinks its photos (SetNull)", async () => {
+  it("deleting an event unlinks its galleries, and deleting a gallery unlinks its photos", async () => {
     const event = await makeEvent();
+    const gallery = await makeGallery({ eventId: event.id });
     const photo = await makeMedia({
       type: "IMAGE",
       url: "/a.svg",
       altTextEn: "Alt",
       embedUrl: null,
-      eventId: event.id,
+      galleryId: gallery.id,
     });
     await prisma.event.delete({ where: { id: event.id } });
     expect(
-      (await prisma.mediaItem.findUniqueOrThrow({ where: { id: photo.id } }))
+      (await prisma.gallery.findUniqueOrThrow({ where: { id: gallery.id } }))
         .eventId,
+    ).toBeNull();
+    await prisma.gallery.delete({ where: { id: gallery.id } });
+    expect(
+      (await prisma.mediaItem.findUniqueOrThrow({ where: { id: photo.id } }))
+        .galleryId,
     ).toBeNull();
   });
 });
 
 describe("getMediaCenter", () => {
-  it("groups by category and type and builds event galleries", async () => {
+  it("groups by category and type and builds galleries", async () => {
     const center = await getMediaCenter("en");
     expect(center.sermons.map((m) => m.id).sort()).toEqual([
       "media-1",
@@ -418,41 +439,57 @@ describe("getMediaCenter", () => {
     expect(center.audio.map((m) => m.id)).toEqual(["media-5"]);
     expect(center.audio[0]!.audioUrl).toBe("/demo/audio/sample-silence.wav");
     expect(center.videos.map((m) => m.id)).toEqual(["media-2"]);
-    expect(center.galleries.map((g) => g.event?.slug ?? null)).toEqual([
-      "sample-past-gathering",
-      null,
+    expect(center.galleries.map((g) => g.id)).toEqual([
+      "gallery-event-4",
+      "other",
     ]);
+    expect(center.galleries[0]!.event?.slug).toBe("sample-past-gathering");
+    expect(center.galleries[0]!.title).toBe("Sample past gathering");
     expect(center.galleries[0]!.items.map((m) => m.id)).toEqual([
       "media-photo-1",
       "media-photo-2",
       "media-photo-3",
     ]);
+    expect(center.galleries[1]!.items.map((m) => m.id)).toEqual([
+      "media-photo-4",
+    ]);
   });
 
-  it("drops drafts and unsafe embeds, and ungroups photos of draft events", async () => {
+  it("drops drafts and unsafe embeds; draft galleries and their photos stay hidden", async () => {
     const draftEvent = await makeEvent({ publishStatus: "DRAFT" });
+    const draftGallery = await makeGallery({ status: "DRAFT" });
+    const linkedToDraftEvent = await makeGallery({
+      status: "PUBLISHED",
+      eventId: draftEvent.id,
+    });
     const unsafe = await makeMedia({
       isFeatured: false,
       embedUrl: "https://www.youtube.com/embed/aaaaaaaaaaa",
     });
     const draft = await makeMedia({ isFeatured: false, status: "DRAFT" });
-    const photo = await makeMedia({
-      type: "IMAGE",
-      url: "/a.svg",
-      altTextEn: "Alt",
-      embedUrl: null,
-      isFeatured: false,
-      eventId: draftEvent.id,
-    });
+    const photo = (galleryId: string | null) =>
+      makeMedia({
+        type: "IMAGE",
+        url: "/a.svg",
+        altTextEn: "Alt",
+        embedUrl: null,
+        isFeatured: false,
+        galleryId,
+      });
+    const hidden = await photo(draftGallery.id);
+    const shown = await photo(linkedToDraftEvent.id);
     const center = await getMediaCenter("en");
     const video = center.videos.find((m) => m.id === unsafe.id);
     expect(video!.embedUrl).toBeNull();
     expect(center.videos.map((m) => m.id)).not.toContain(draft.id);
-    const other = center.galleries.find((g) => g.event === null)!;
-    expect(other.items.map((m) => m.id)).toContain(photo.id);
+    const allPhotos = center.galleries.flatMap((g) => g.items.map((m) => m.id));
+    expect(allPhotos).not.toContain(hidden.id);
+    const group = center.galleries.find((g) => g.id === linkedToDraftEvent.id)!;
+    expect(group.items.map((m) => m.id)).toEqual([shown.id]);
+    expect(group.event).toBeNull();
+    expect(center.galleries.map((g) => g.id)).not.toContain(draftGallery.id);
   });
 });
-
 describe("getPublishedSlugs", () => {
   it("excludes drafts", async () => {
     const draftPost = await makePost({ status: "DRAFT" });

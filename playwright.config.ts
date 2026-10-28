@@ -55,7 +55,12 @@ export default defineConfig({
     },
     {
       name: "admin-readonly",
-      testMatch: ["admin-access.spec.ts", "admin-a11y.spec.ts"],
+      testMatch: [
+        "admin-access.spec.ts",
+        "admin-a11y.spec.ts",
+        // Phase 7 (read-only: anonymous / cross-origin rejections)
+        "upload-access.spec.ts",
+      ],
       dependencies: ["setup"],
       use: { ...devices["Desktop Chrome"] },
     },
@@ -65,6 +70,8 @@ export default defineConfig({
       name: "admin-mutations",
       testMatch: [
         "admin-content.spec.ts",
+        // Phase 7 uploads (local driver), galleries and pickers
+        "admin-uploads.spec.ts",
         "admin-logout.spec.ts",
         "admin-screenshots.spec.ts",
         "admin-settings.spec.ts",
@@ -73,6 +80,7 @@ export default defineConfig({
         "contact-form.spec.ts",
         "admin-inbox.spec.ts",
         "phase6-screenshots.spec.ts",
+        "phase7-screenshots.spec.ts",
       ],
       dependencies: ["public", "admin-readonly"],
       fullyParallel: false,
@@ -99,6 +107,10 @@ export default defineConfig({
       TURNSTILE_SITE_KEY: "",
       TURNSTILE_SECRET_KEY: "",
       RESEND_API_KEY: "",
+      // Phase 7: always the local upload driver in E2E (never real Vercel Blob).
+      BLOB_READ_WRITE_TOKEN: "",
+      LOCAL_UPLOAD_DIR: ".local/uploads-e2e",
+      VERCEL: "",
     },
   },
 });

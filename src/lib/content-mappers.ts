@@ -223,8 +223,11 @@ export function toMediaSummary(
 export type MediaView = MediaSummary & {
   type: MediaType;
   category: MediaCategory;
-  eventId: string | null;
+  galleryId: string | null;
   sortOrder: number;
+  /** Stored pixel size of uploaded pictures (layout only), else null. */
+  width: number | null;
+  height: number | null;
   /** AUDIO only: a safe URL, else null ("audio coming soon"). */
   audioUrl: string | null;
   /** VIDEO_EMBED only: re-validated youtube-nocookie embed URL, else null. */
@@ -247,8 +250,10 @@ export function toMediaView(row: MediaItem, locale: AppLocale): MediaView {
     ...toMediaSummary(row, locale),
     type: row.type,
     category: row.category,
-    eventId: row.eventId,
+    galleryId: row.galleryId,
     sortOrder: row.sortOrder,
+    width: row.width,
+    height: row.height,
     audioUrl: row.type === "AUDIO" ? safeUrlOrNull(row.url) : null,
     embedUrl: row.type === "VIDEO_EMBED" ? safeEmbedUrl(row.embedUrl) : null,
     image: imageUrl && alt !== "" ? { url: imageUrl, alt } : null,
@@ -256,32 +261,81 @@ export function toMediaView(row: MediaItem, locale: AppLocale): MediaView {
 }
 
 export type PhotoGroup = {
-  event: { id: string; title: string; slug: string } | null;
+  /** Gallery id, or "other" for photos outside any gallery. */
+  id: string;
+  /** Localized gallery title ("" for the "other" group). */
+  title: string;
+  description: LocalizedBlock | null;
+  /** The linked event when it is published, else null. */
+  event: { title: string; slug: string } | null;
   items: MediaView[];
 };
 
+/** A published gallery row with its (already filtered) photo rows. */
+export type GalleryRow = {
+  id: string;
+  titleEn: string;
+  titleNe: string | null;
+  descriptionEn: string | null;
+  descriptionNe: string | null;
+  event: Event | null;
+  items: MediaItem[];
+};
+
+/** Gallery order: sortOrder, then publishedAt, then id. */
+export function compareGalleryItems(
+  a: Pick<MediaView, "sortOrder" | "publishedAt" | "id">,
+  b: Pick<MediaView, "sortOrder" | "publishedAt" | "id">,
+): number {
+  return (
+    a.sortOrder - b.sortOrder ||
+    Date.parse(a.publishedAt) - Date.parse(b.publishedAt) ||
+    a.id.localeCompare(b.id)
+  );
+}
+
 /**
- * Groups photos by linked (published) event, in the order of `events`;
- * photos without a published event go to a final "Other photos" group.
- * Items inside an event group are ordered by sortOrder (stable).
+ * Gallery rows (in the given order) -> photo groups; photos without a
+ * picture URL or alt text are dropped and empty galleries are skipped.
+ * `otherPhotos` (no gallery) form a final "other" group.
  */
-export function groupPhotoGalleries(
-  images: readonly MediaView[],
-  events: readonly { id: string; title: string; slug: string }[],
+export function toPhotoGroups(
+  galleries: readonly GalleryRow[],
+  otherPhotos: readonly MediaItem[],
+  locale: AppLocale,
 ): PhotoGroup[] {
-  const known = new Set(events.map((e) => e.id));
-  const groups: PhotoGroup[] = events
-    .map((event) => ({
-      event,
-      items: images
-        .filter((m) => m.eventId === event.id)
-        .toSorted((a, b) => a.sortOrder - b.sortOrder),
+  const photos = (rows: readonly MediaItem[]) =>
+    rows
+      .map((m) => toMediaView(m, locale))
+      .filter((m) => m.image !== null)
+      .toSorted(compareGalleryItems);
+  const groups: PhotoGroup[] = galleries
+    .map((g) => ({
+      id: g.id,
+      title: pick(g.titleEn, g.titleNe, locale),
+      description: localizedBlock(g.descriptionEn, g.descriptionNe, locale),
+      event:
+        g.event && g.event.publishStatus === "PUBLISHED"
+          ? {
+              title: pick(g.event.titleEn, g.event.titleNe, locale),
+              slug: g.event.slug,
+            }
+          : null,
+      items: photos(g.items),
     }))
     .filter((g) => g.items.length > 0);
-  const other = images.filter(
-    (m) => m.eventId == null || !known.has(m.eventId),
-  );
-  if (other.length > 0) groups.push({ event: null, items: other });
+  const other = otherPhotos
+    .map((m) => toMediaView(m, locale))
+    .filter((m) => m.image !== null);
+  if (other.length > 0) {
+    groups.push({
+      id: "other",
+      title: "",
+      description: null,
+      event: null,
+      items: other,
+    });
+  }
   return groups;
 }
 

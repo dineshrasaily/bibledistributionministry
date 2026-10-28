@@ -13,6 +13,7 @@ import {
   setMediaStatus,
   updateMedia,
 } from "@/server/services/media";
+import { removeStoredFile } from "@/server/storage";
 import {
   type ActionResult,
   formDataToObject,
@@ -96,6 +97,8 @@ export async function deleteMediaAction(
       revalidate: ["public", "admin"],
       successMessage: "Media item deleted.",
       run: deleteMedia,
+      // The row is gone: now remove its stored file (an orphan is harmless).
+      afterCommit: (r) => removeStoredFile(r.data?.stored),
     },
     formDataToObject(formData),
   );

@@ -84,8 +84,16 @@ export type DemoMedia = {
   url?: string;
   /** IMAGE only. */
   altText?: LocalizedText;
-  /** Links a photo to a demo event's gallery. */
-  eventId?: string;
+  /** Puts a photo in a demo gallery (ordered by sortOrder). */
+  galleryId?: string;
   sortOrder?: number;
+  isDemo: true;
+};
+
+export type DemoGallery = {
+  id: string;
+  /** Linked demo event (its title is reused). */
+  eventId: string;
+  title: LocalizedText;
   isDemo: true;
 };

@@ -9,7 +9,9 @@ import { MarkdownEditor } from "@/components/admin/MarkdownEditor";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { FormSkeleton } from "@/components/admin/Skeletons";
 import { SubmitButton } from "@/components/admin/SubmitButton";
-import { UPLOAD_HINT } from "@/components/admin/UploadHint";
+import { IMAGE_FIELD_HINT } from "@/components/admin/UploadHint";
+import { MediaPickerField } from "@/components/admin/MediaPickerField";
+import { getStorageMode } from "@/server/storage";
 import { SOCIAL_PLATFORMS, type SocialPlatform } from "@/config/social";
 import { updateSiteSettingsAction } from "@/server/actions/settings";
 import { requireOwnerPage } from "@/server/auth/guards";
@@ -28,6 +30,7 @@ const PLATFORMS = Object.entries(SOCIAL_PLATFORMS) as [
 async function SettingsForm() {
   const s = await getSettingsForEdit();
   const social = socialUrlsOf(s);
+  const mode = getStorageMode();
 
   return (
     <FormShell action={updateSiteSettingsAction} label="Site settings">
@@ -44,15 +47,12 @@ async function SettingsForm() {
           hint="Shown in the site header, footer and browser tab."
           required
         />
-        {/* TODO(Phase 7): replace with a logo upload. */}
-        <TextField
+        <MediaPickerField
           name="logoUrl"
-          label="Logo image link (optional)"
-          type="url"
-          inputMode="url"
-          defaultValue={s.logoUrl ?? ""}
-          placeholder="https://"
-          hint={UPLOAD_HINT}
+          label="Logo picture (optional)"
+          defaultValue={s.logoUrl}
+          hint={`${IMAGE_FIELD_HINT} A transparent PNG works best.`}
+          mode={mode}
         />
         <TextField
           name="contactEmail"
@@ -122,15 +122,13 @@ async function SettingsForm() {
           defaultNe={s.aboutIntroNe}
           hint="Shown on the home page and in the About page story section. Separate paragraphs with an empty line."
         />
-        {/* TODO(Phase 7): replace with an image upload / library picker. */}
-        <TextField
+        <MediaPickerField
           name="aboutImageUrl"
-          label="Photo link (optional)"
-          type="text"
-          inputMode="url"
-          defaultValue={s.aboutImageUrl ?? ""}
-          placeholder="https://"
-          hint="Paste an image link (https://...) or a site path such as /brand/logo-full.png. Uploading arrives in a later update."
+          label="Photo (optional)"
+          defaultValue={s.aboutImageUrl}
+          hint={`${IMAGE_FIELD_HINT} Choosing a library picture fills an empty photo description below.`}
+          mode={mode}
+          altFields={{ en: "aboutImageAltEn", ne: "aboutImageAltNe" }}
         />
         <BilingualField
           name="aboutImageAlt"
@@ -138,7 +136,7 @@ async function SettingsForm() {
           maxLength={300}
           defaultEn={s.aboutImageAltEn}
           defaultNe={s.aboutImageAltNe}
-          hint="Required when a photo link is set: describe the photo for people who can't see it."
+          hint="Required when a photo is set: describe the photo for people who can't see it."
         />
         <MarkdownEditor
           name="testimonyEn"

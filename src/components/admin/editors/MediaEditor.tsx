@@ -8,36 +8,41 @@ import {
 } from "@/components/admin/fields";
 import { FormShell } from "@/components/admin/FormShell";
 import { MEDIA_CATEGORY_LABELS, optionsOf } from "@/components/admin/labels";
+import { MediaPickerField } from "@/components/admin/MediaPickerField";
 import { MediaTypeFields } from "@/components/admin/MediaTypeFields";
 import { PublishControls } from "@/components/admin/PublishControls";
-import { UPLOAD_HINT, UploadNoteCard } from "@/components/admin/UploadHint";
+import { StoredFilePanel } from "@/components/admin/StoredFilePanel";
+import { THUMBNAIL_HINT, UploadNoteCard } from "@/components/admin/UploadHint";
 import type { MediaItem } from "@/generated/prisma/client";
+import type { StorageMode } from "@/lib/storage-mode";
 import { createMediaAction, updateMediaAction } from "@/server/actions/media";
 
-/** Create / edit form for a media item (image, audio or YouTube link). */
+/** Create / edit form for a media item (pasted link, YouTube link or uploaded file). */
 export function MediaEditor({
   media,
-  events,
+  mode,
 }: {
   media?: MediaItem;
-  /** Options for the linked mission/event select. */
-  events: { id: string; label: string }[];
+  mode: StorageMode;
 }) {
+  const uploaded = media?.storageKey != null;
   return (
     <FormShell
       action={media ? updateMediaAction : createMediaAction}
       label={media ? "Edit media" : "New media"}
     >
-      <UploadNoteCard />
+      {uploaded ? null : <UploadNoteCard mode={mode} />}
       {media ? <input type="hidden" name="id" value={media.id} /> : null}
 
       <EditorSection title="Media">
+        {uploaded && media ? <StoredFilePanel media={media} /> : null}
         <MediaTypeFields
           defaultType={media?.type ?? "IMAGE"}
           url={media?.url}
           embedUrl={media?.embedUrl}
           altTextEn={media?.altTextEn}
           altTextNe={media?.altTextNe}
+          locked={uploaded}
         />
         <SelectField
           name="category"
@@ -45,17 +50,6 @@ export function MediaEditor({
           options={optionsOf(MEDIA_CATEGORY_LABELS)}
           defaultValue={media?.category ?? "GENERAL"}
           required
-        />
-        {/* TODO(Phase 7): proper galleries (create, order, link to an event). */}
-        <SelectField
-          name="eventId"
-          label="Linked mission/event (optional)"
-          options={[
-            { value: "", label: "None" },
-            ...events.map((e) => ({ value: e.id, label: e.label })),
-          ]}
-          defaultValue={media?.eventId ?? ""}
-          hint="Photos linked to an event appear in its gallery on the Missions page."
         />
         <TextField
           name="sortOrder"
@@ -65,7 +59,7 @@ export function MediaEditor({
           min={0}
           max={9999}
           defaultValue={media?.sortOrder ?? 0}
-          hint="Lower numbers come first."
+          hint="Lower numbers come first inside its gallery. Manage galleries under Galleries."
         />
       </EditorSection>
 
@@ -96,15 +90,12 @@ export function MediaEditor({
           max={1440}
           defaultValue={media?.durationMinutes ?? ""}
         />
-        {/* TODO(Phase 7): replace with an image upload. */}
-        <TextField
+        <MediaPickerField
           name="thumbnailUrl"
-          label="Thumbnail image link (optional)"
-          type="url"
-          inputMode="url"
-          defaultValue={media?.thumbnailUrl ?? ""}
-          placeholder="https://"
-          hint={UPLOAD_HINT}
+          label="Thumbnail picture (optional)"
+          defaultValue={media?.thumbnailUrl}
+          hint={THUMBNAIL_HINT}
+          mode={mode}
         />
         <DateTimeField
           name="publishedAt"

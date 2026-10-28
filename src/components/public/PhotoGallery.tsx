@@ -2,6 +2,7 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { useRef, useState, type KeyboardEvent } from "react";
+import { SiteImage } from "@/components/ui/SiteImage";
 
 export type GalleryPhoto = {
   id: string;
@@ -11,6 +12,9 @@ export type GalleryPhoto = {
   caption: string | null;
   /** Accessible name of the thumbnail button, e.g. "Open photo: ...". */
   openLabel: string;
+  /** Stored pixel size (uploaded pictures), used for the lightbox layout. */
+  width?: number | null;
+  height?: number | null;
 };
 
 export type GalleryLabels = {
@@ -66,16 +70,15 @@ export function PhotoGallery({
                 opener.current = e.currentTarget;
                 setIndex(i);
               }}
-              className="group block w-full cursor-pointer overflow-hidden rounded-md border border-beige bg-beige"
+              className="group relative block aspect-[3/2] w-full cursor-pointer overflow-hidden rounded-md border border-beige bg-beige"
               data-testid="gallery-thumb"
             >
-              {/* TODO(Phase 7): next/image + Blob */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <SiteImage
                 src={photo.url}
                 alt=""
-                loading="lazy"
-                className="aspect-[3/2] w-full object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                fill
+                sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                className="object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
               />
               <span className="sr-only">{photo.openLabel}</span>
             </button>
@@ -114,12 +117,24 @@ export function PhotoGallery({
                 <Dialog.Description className="sr-only">
                   {labels.hint}
                 </Dialog.Description>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={current.url}
-                  alt={current.alt}
-                  className="max-h-[70dvh] w-auto max-w-full rounded-md object-contain sm:max-h-[80dvh]"
-                />
+                {current.width && current.height ? (
+                  <SiteImage
+                    src={current.url}
+                    alt={current.alt}
+                    width={current.width}
+                    height={current.height}
+                    sizes="100vw"
+                    loading="eager"
+                    className="h-auto max-h-[70dvh] w-auto max-w-full rounded-md object-contain sm:max-h-[80dvh]"
+                  />
+                ) : (
+                  <SiteImage
+                    src={current.url}
+                    alt={current.alt}
+                    loading="eager"
+                    className="max-h-[70dvh] w-auto max-w-full rounded-md object-contain sm:max-h-[80dvh]"
+                  />
+                )}
                 <div className="grid w-full max-w-5xl grid-cols-2 items-center gap-3 sm:flex sm:justify-between">
                   <button
                     type="button"

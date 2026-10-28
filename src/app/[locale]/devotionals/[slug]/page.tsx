@@ -11,6 +11,7 @@ import { ShareButtons } from "@/components/public/ShareButtons";
 import { Badge, DemoBadge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
 import { MarkdownContent } from "@/components/ui/MarkdownContent";
+import { SiteImage } from "@/components/ui/SiteImage";
 import { getSiteConfig } from "@/config/site";
 import { routing } from "@/i18n/routing";
 import {
@@ -115,13 +116,16 @@ export default async function PostDetailPage({ params }: PageProps) {
 
       <Container className="flex max-w-3xl flex-col gap-10">
         {post.coverImageUrl ? (
-          // TODO(Phase 7): next/image + Blob
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={post.coverImageUrl}
-            alt=""
-            className="aspect-video w-full rounded-lg object-cover"
-          />
+          <div className="relative aspect-video w-full overflow-hidden rounded-lg">
+            <SiteImage
+              src={post.coverImageUrl}
+              alt=""
+              fill
+              priority
+              sizes="(min-width: 768px) 48rem, 100vw"
+              className="object-cover"
+            />
+          </div>
         ) : null}
 
         {post.scriptureRefs.length > 0 ? (

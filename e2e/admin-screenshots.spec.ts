@@ -79,9 +79,7 @@ test.describe("as the owner", () => {
   test("screenshot admin media editor (Phase 3) @ 1280px", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/admin/media/new");
-    await expect(
-      page.getByLabel("Linked mission/event (optional)"),
-    ).toBeVisible();
+    await expect(page.getByLabel("Order in gallery")).toBeVisible();
     await page.waitForLoadState("networkidle");
     await page.evaluate(() => document.fonts.ready);
     expect(await scrollWidth(page)).toBeLessThanOrEqual(1280);

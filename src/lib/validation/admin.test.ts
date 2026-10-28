@@ -108,7 +108,8 @@ describe("settingsSchema", () => {
   });
 });
 
-describe("media eventId and sortOrder", () => {
+// Phase 7: the media eventId link was replaced by galleries (rewritten test).
+describe("media sortOrder", () => {
   const base = {
     type: "AUDIO",
     category: "PODCAST",
@@ -117,22 +118,15 @@ describe("media eventId and sortOrder", () => {
     intent: "draft",
   };
 
-  it("treats a blank event as none and a blank order as 0", () => {
-    const parsed = mediaSchema.parse({ ...base, eventId: "", sortOrder: "" });
-    expect(parsed.eventId).toBeNull();
+  it("treats a blank order as 0 and ignores a stray eventId", () => {
+    const parsed = mediaSchema.parse({
+      ...base,
+      eventId: "event-4",
+      sortOrder: "",
+    });
     expect(parsed.sortOrder).toBe(0);
-    expect(mediaSchema.parse(base).eventId).toBeNull();
+    expect("eventId" in parsed).toBe(false);
   });
-
-  it("accepts a valid id and rejects an invalid one", () => {
-    expect(mediaSchema.parse({ ...base, eventId: "event-4" }).eventId).toBe(
-      "event-4",
-    );
-    const bad = mediaSchema.safeParse({ ...base, eventId: "Bad Id!" });
-    expect(bad.success).toBe(false);
-    expect(bad.error?.issues[0]?.path).toEqual(["eventId"]);
-  });
-
   it("bounds sortOrder to whole numbers 0-9999", () => {
     expect(mediaSchema.parse({ ...base, sortOrder: "12" }).sortOrder).toBe(12);
     for (const value of ["-1", "10000", "1.5", "abc"]) {

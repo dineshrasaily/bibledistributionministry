@@ -62,11 +62,13 @@ test("the About testimony saved in Settings replaces the sample text", async ({
   );
 });
 
-test("an About photo link without a description is a field error", async ({
+test("an About photo without a description is a field error", async ({
   page,
 }) => {
   await page.goto("/admin/settings");
-  await page.getByLabel(/^Photo link/).fill("/brand/logo-full.png");
+  await page
+    .getByLabel("Photo (optional)", { exact: true })
+    .fill("/brand/logo-full.png");
   await page.getByRole("button", { name: "Save settings" }).click();
   await expect(page.getByTestId("form-error-summary")).toBeVisible();
   await expect(

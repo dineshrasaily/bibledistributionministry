@@ -46,7 +46,7 @@ export const FEATURED_TAKEN_MSG =
 export const CATEGORY_GONE_MSG =
   "One of the selected categories no longer exists. Refresh and try again.";
 
-export type AdminActionDef<S extends z.ZodType, T> = {
+export type AdminActionDef<S extends z.ZodType, T, P = z.output<S>> = {
   /** e.g. "post.update"; also the AuditLog action. */
   name: string;
   role: "ADMIN" | "OWNER";
@@ -54,11 +54,18 @@ export type AdminActionDef<S extends z.ZodType, T> = {
   entityType: string;
   revalidate: Array<"public" | "admin">;
   successMessage: string;
-  run: (
-    tx: Tx,
-    input: z.output<S>,
-    actor: AdminActor,
-  ) => Promise<ServiceResult<T>>;
+  /**
+   * Optional step after Zod and before the transaction, for checks that must
+   * not run inside a DB transaction (file/network inspection). A DomainError
+   * here becomes a field/form error like one thrown by `run`.
+   */
+  prepare?: (input: z.output<S>, actor: AdminActor) => Promise<P>;
+  run: (tx: Tx, input: P, actor: AdminActor) => Promise<ServiceResult<T>>;
+  /**
+   * Optional step after a successful commit (e.g. deleting a stored file).
+   * Its errors are logged and never change the result.
+   */
+  afterCommit?: (result: ServiceResult<T>, actor: AdminActor) => Promise<void>;
 };
 
 function uniqueField(error: Prisma.PrismaClientKnownRequestError): string {
@@ -130,10 +137,11 @@ function mapError<T>(
   return { ok: false, code: "ERROR", formError: ERROR_MSG };
 }
 
-export async function runAdminAction<S extends z.ZodType, T = undefined>(
-  def: AdminActionDef<S, T>,
-  raw: unknown,
-): Promise<ActionResult<T>> {
+export async function runAdminAction<
+  S extends z.ZodType,
+  T = undefined,
+  P = z.output<S>,
+>(def: AdminActionDef<S, T, P>, raw: unknown): Promise<ActionResult<T>> {
   // 1. Guard (before parsing anything).
   let actor: AdminActor;
   try {
@@ -161,11 +169,23 @@ export async function runAdminAction<S extends z.ZodType, T = undefined>(
     };
   }
 
+  // 2b. Optional preparation outside the transaction.
+  // Without prepare, P is z.output<S> (the default type argument).
+  let input = parsed.data as unknown as P;
+  if (def.prepare) {
+    try {
+      input = await def.prepare(parsed.data as z.output<S>, actor);
+    } catch (error) {
+      unstable_rethrow(error);
+      return mapError<T>(error, def, actor);
+    }
+  }
+
   // 3. Mutation + audit row in one transaction.
   let result: ServiceResult<T>;
   try {
     result = await prisma.$transaction(async (tx) => {
-      const r = await def.run(tx, parsed.data as z.output<S>, actor);
+      const r = await def.run(tx, input, actor);
       await tx.auditLog.create({
         data: {
           actorId: actor.id,
@@ -181,6 +201,18 @@ export async function runAdminAction<S extends z.ZodType, T = undefined>(
   } catch (error) {
     unstable_rethrow(error); // notFound() inside run: rolled back, then rethrown
     return mapError<T>(error, def, actor);
+  }
+
+  // 3b. Optional post-commit step (never changes the result).
+  if (def.afterCommit) {
+    try {
+      await def.afterCommit(result, actor);
+    } catch (error) {
+      log.error("admin.action.after_commit_failed", {
+        action: def.name,
+        name: (error as Error)?.name,
+      });
+    }
   }
 
   // 4. Revalidation.

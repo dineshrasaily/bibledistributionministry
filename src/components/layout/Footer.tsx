@@ -24,7 +24,7 @@ export async function Footer({ locale }: { locale: AppLocale }) {
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2.5">
             {site.logoUrl ? (
-              // TODO(Phase 7): next/image + Blob
+              // logo stays <img>: fixed tiny size; header layout is user-customized
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={site.logoUrl}

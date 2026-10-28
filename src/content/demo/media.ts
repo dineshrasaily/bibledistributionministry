@@ -1,4 +1,5 @@
-import type { DemoMedia } from "./types";
+import { demoEvents } from "./events";
+import type { DemoGallery, DemoMedia } from "./types";
 
 // Photos are hand-drawn abstract SVGs and the audio is one second of
 // silence: no real people, places or recordings are attributed to the
@@ -108,7 +109,23 @@ export const demoMedia: readonly DemoMedia[] = [
       en: `Sample placeholder image ${n}: abstract navy and gold pattern`,
       ne: `नमूना प्लेसहोल्डर तस्बिर ${n}: गाढा नीलो र सुनौलो अमूर्त ढाँचा`,
     },
-    ...(n <= 3 ? { eventId: "event-4", sortOrder: n } : {}),
+    ...(n <= 3 ? { galleryId: "gallery-event-4", sortOrder: n } : {}),
     isDemo: true,
   })),
+];
+
+const galleryEvent = demoEvents.find((e) => e.id === "event-4")!;
+
+/**
+ * The demo photo gallery of the past gathering. Its id matches the gallery
+ * the Phase 7 migration creates from the old event link, so seeding an
+ * existing database is a no-op.
+ */
+export const demoGalleries: readonly DemoGallery[] = [
+  {
+    id: "gallery-event-4",
+    eventId: galleryEvent.id,
+    title: galleryEvent.title,
+    isDemo: true,
+  },
 ];

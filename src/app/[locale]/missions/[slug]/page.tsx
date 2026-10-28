@@ -12,6 +12,7 @@ import { Badge, DemoBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { MarkdownContent } from "@/components/ui/MarkdownContent";
+import { SiteImage } from "@/components/ui/SiteImage";
 import { routing } from "@/i18n/routing";
 import { getPublishedEventBySlug, getPublishedSlugs } from "@/lib/content";
 import { localizedHref } from "@/lib/i18n-path";
@@ -126,13 +127,16 @@ export default async function EventDetailPage({ params }: PageProps) {
         ) : null}
 
         {event.coverImageUrl ? (
-          // TODO(Phase 7): next/image + Blob
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={event.coverImageUrl}
-            alt=""
-            className="aspect-video w-full rounded-lg object-cover"
-          />
+          <div className="relative aspect-video w-full overflow-hidden rounded-lg">
+            <SiteImage
+              src={event.coverImageUrl}
+              alt=""
+              fill
+              priority
+              sizes="(min-width: 768px) 48rem, 100vw"
+              className="object-cover"
+            />
+          </div>
         ) : null}
 
         {event.description ? (
@@ -211,6 +215,8 @@ export default async function EventDetailPage({ params }: PageProps) {
                 url: m.image!.url,
                 alt: m.image!.alt,
                 caption: m.title,
+                width: m.width,
+                height: m.height,
                 openLabel: tLightbox("open", { alt: m.image!.alt }),
               }))}
               labels={{

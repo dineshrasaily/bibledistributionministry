@@ -30,10 +30,22 @@ describe("seedDemoContent", () => {
     expect(await prisma.postCategory.count()).toBe(5);
   });
 
-  it("links the demo gallery photos to the past gathering, in order", async () => {
+  // Phase 7: rewritten for the Gallery model (was MediaItem.eventId).
+  it("puts the demo photos in the past gathering's gallery, in order", async () => {
     await seedDemoContent(prisma);
+    await seedDemoContent(prisma); // idempotent: no duplicate gallery
+    expect(await prisma.gallery.count()).toBe(1);
+    const gallery = await prisma.gallery.findUniqueOrThrow({
+      where: { id: "gallery-event-4" },
+    });
+    expect(gallery).toMatchObject({
+      eventId: "event-4",
+      status: "PUBLISHED",
+      isDemo: true,
+      titleEn: "Sample past gathering",
+    });
     const photos = await prisma.mediaItem.findMany({
-      where: { eventId: "event-4" },
+      where: { galleryId: "gallery-event-4" },
       orderBy: { sortOrder: "asc" },
     });
     expect(photos.map((p) => p.id)).toEqual([

@@ -147,6 +147,20 @@ export function makeMedia(
   });
 }
 
+export function makeGallery(
+  data: Partial<Prisma.GalleryUncheckedCreateInput> = {},
+) {
+  const n = next();
+  return prisma.gallery.create({
+    data: {
+      titleEn: `Test gallery ${n}`,
+      status: "PUBLISHED",
+      publishedAt: new Date(),
+      ...data,
+    },
+  });
+}
+
 export function makeVerse(
   data: Partial<Prisma.BibleVerseUncheckedCreateInput> = {},
 ) {

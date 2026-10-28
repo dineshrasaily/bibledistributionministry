@@ -19,6 +19,8 @@ wording until the ministry's legal status has been verified.
 6. Prayer request and contact forms (Turnstile, honeypot, rate limit,
    link-only email notices, consent-only public prayer wall, retention
    purge) ✅
+7. Media uploads (pictures and audio, Vercel Blob in production and a local
+   folder in development), media library, galleries, picture pickers ✅
 
 ## Tech stack
 
@@ -168,8 +170,33 @@ Prayer and contact forms (Phase 6), all optional:
 | `CONTACT_TO_EMAIL`         | Who receives the notices (defaults to the contact email in Settings)                   |
 | `FORM_RATE_LIMIT_PER_HOUR` | Accepted submissions per form per network per hour (default 5; the E2E suite sets 100) |
 
-Later phases (media storage, donations) have commented, empty placeholders
-in `.env.example`.
+Media uploads (Phase 7), both optional:
+
+| Variable                | Purpose                                                                                                                      |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob read-write token (public store). Empty locally = files go to `.local/uploads`; empty on Vercel = uploads are off |
+| `LOCAL_UPLOAD_DIR`      | Dev only: folder for locally stored uploads (default `.local/uploads`, never committed)                                      |
+
+Donations (Phase 8) have commented, empty placeholders in `.env.example`.
+
+### Setting up Vercel Blob (media uploads)
+
+Without a token, uploads in local development are saved under
+`.local/uploads` (git-ignored, not backed up). On Vercel without a token,
+uploads are switched off and the admin says so; pasted links keep working.
+Before going live:
+
+1. In your Vercel project open **Storage → Create → Blob** and choose
+   **Public** access (the site shows the files directly to visitors).
+2. Connect the store to **Production** and **Preview** (and Development if
+   you want real uploads on your computer).
+3. Check that `BLOB_READ_WRITE_TOKEN` now appears under Project → Settings →
+   Environment Variables. Uploads from the browser need this token.
+4. Redeploy. The Media library's upload note should no longer say "not set
+   up yet".
+
+Files uploaded on your computer are **not** copied to Vercel Blob. Upload
+them again on the live site.
 
 ### Setting up Cloudflare Turnstile (spam protection)
 
@@ -217,16 +244,34 @@ email, password and authenticator code.
 - **Events & missions**: dates, place, how to help, and a post-trip report
   you can add afterwards. "Event status" (upcoming/completed/cancelled) is
   separate from whether the event is published.
-- **Pictures and videos**: uploading pictures and videos arrives in a later
-  update. For now, paste an image link or a YouTube link into the link
-  fields (the hint under each field says the same).
+- **Uploading pictures and audio** (Media library → **Upload files**): drag
+  files onto the box or press **Choose files**. Pictures can be JPEG, PNG or
+  WebP up to 8 MB; audio can be MP3 or M4A up to 100 MB; at most 10 files at
+  a time. Every picture needs a short **description (alt text)** for people
+  who can't see it. Location data (GPS) is removed from photos before they
+  are sent. New uploads are **drafts** unless you tick "Publish on the
+  public site"; a draft picture can still be used as a cover or logo.
+  **Only upload photos of people who agreed to it, and be careful with faces
+  and places that could put believers at risk.**
+- **Videos** can't be uploaded: put them on YouTube and paste the link with
+  **Add a link**.
+- **Choosing a cover, logo or About photo**: next to each picture field press
+  **Choose from library** (search, then pick a picture) or upload a new one
+  from the same window. You can still paste a link instead. Choosing an
+  About photo fills an empty photo description for you.
+- **Galleries** (Galleries in the menu): create a gallery, link it to a
+  mission/event, add pictures from the library or upload new ones, put them
+  in order with **Move up / Move down**, and publish. Visitors only see
+  published galleries and published photos, on the event's page and on the
+  Media page. Deleting a gallery keeps its pictures in the library.
+- **Deleting files**: deleting an uploaded item also deletes the file. It is
+  refused while the picture is still used as a post or event cover, the
+  logo, the About photo or a thumbnail; change it there first.
   - **YouTube** videos play in privacy-enhanced mode (youtube-nocookie.com)
     and nothing loads from YouTube until a visitor presses play.
   - **Audio** links play in the browser's own audio player on the Media page.
-  - **Photo galleries**: on an image, choose "Linked mission/event" to show
-    it in that event's gallery on its Missions page; "Order in gallery"
-    sorts the photos (lower numbers first). Unlinked photos appear under
-    "Other photos" on the Media page.
+  - **Other photos**: published pictures that are not in a gallery appear
+    under "Other photos" on the Media page.
 - **Settings** (owner only): ministry name, logo link, contact email, social
   links, the home-page text and the **About page** (story, optional photo
   with a required description, testimony, vision, values, statement of
@@ -336,6 +381,22 @@ email, password and authenticator code.
 - Phase 9's Content-Security-Policy must allow
   `https://challenges.cloudflare.com` in `script-src` and `frame-src`
   (Turnstile).
+- Uploads (Phase 7): the upload, token and library routes under
+  `/api/admin/*` require a signed-in admin (same checks as `requireAdmin`)
+  and, for uploads, a same-origin request (`Origin` must match; route
+  handlers have no built-in CSRF check). Every upload and token is
+  audit-logged (types and sizes only, never file names). The server accepts
+  only JPEG/PNG/WebP and MP3/M4A whose extension, declared type **and first
+  bytes** agree, within the size limits; SVG is refused (it can carry
+  scripts). Files are registered only after the server re-inspects them.
+- Local uploads are served by `/api/uploads/...` with strict key checks (no
+  `..`, no links outside the folder), `nosniff` and a sandboxing CSP. Public
+  file URLs are hard to guess but **public**: anyone with the link can see
+  the file.
+- Phase 9's CSP must allow `https://*.public.blob.vercel-storage.com` in
+  `img-src` and `media-src`, and `https://vercel.com/api/blob` in
+  `connect-src` (the only API host in the `@vercel/blob` 2.8.2 browser
+  client).
 
 ## Project structure
 
@@ -407,6 +468,8 @@ ivory/white is about 2.7:1, so it is decorative only.
 - Set real Turnstile and Resend keys (see above) and check **Inbox
   settings** shows "live keys" and "Resend configured". Re-read the Privacy
   Policy against how the forms actually handle data.
+- Create the Vercel Blob store (Public) and re-upload any pictures you
+  uploaded locally.
 - Replace all demo content and untick "Demo site".
 - Have a native speaker review the Nepali text (including the Phase 3
   strings and the Nepali legal templates).
@@ -419,6 +482,16 @@ ivory/white is about 2.7:1, so it is decorative only.
 4. Database and content with Prisma + Neon Postgres ✅
 5. Auth and admin: one OWNER plus up to 3 EDITOR accounts ✅
 6. Prayer request and contact forms (Zod validation, Cloudflare Turnstile, email notifications via Resend) ✅
-7. Picture and video uploads to Vercel Blob (replaces the link fields)
+7. Picture and audio uploads to Vercel Blob, media library and galleries ✅
 8. Donations in USD with Stripe (no tax-status claims until verified)
 9. Hardening (full CSP, recovery codes) and deployment to Vercel
+
+## Known limitations (Phase 7)
+
+- Uploads that are never registered (for example a closed tab) leave an
+  unused file behind; there is no automatic clean-up yet.
+- There is no separate upload rate limit (uploads need a signed-in admin
+  with an authenticator code, and the size limits apply).
+- Video files can't be uploaded; videos stay YouTube links.
+- Location data is removed in the browser. On the Vercel Blob path the
+  server never sees the file bytes except the first few (type check).

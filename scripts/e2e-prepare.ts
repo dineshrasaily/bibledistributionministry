@@ -5,7 +5,7 @@
  * Imports only pure modules (no server-only / next).
  */
 import { randomBytes } from "node:crypto";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { createPrismaClient } from "../src/lib/prisma-factory";
 import { readTotpKey } from "../src/server/auth/keys";
@@ -124,6 +124,12 @@ async function main(): Promise<void> {
       "e2e:prepare requires DATABASE_URL to be the local mission_test URL.",
     );
   }
+
+  // 1b. Fresh E2E upload folder (exactly this path; Phase 7 local driver).
+  rmSync(path.join(ROOT_DIR, ".local", "uploads-e2e"), {
+    recursive: true,
+    force: true,
+  });
 
   // 2. Start Postgres if needed and leave markers for the teardowns.
   const { startedNow } = await start();

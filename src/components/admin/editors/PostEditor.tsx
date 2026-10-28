@@ -5,14 +5,15 @@ import {
   GroupError,
   SelectField,
   TextAreaField,
-  TextField,
 } from "@/components/admin/fields";
 import { FormShell } from "@/components/admin/FormShell";
 import { optionsOf, POST_TYPE_LABELS } from "@/components/admin/labels";
 import { MarkdownEditor } from "@/components/admin/MarkdownEditor";
 import { PublishControls } from "@/components/admin/PublishControls";
 import { SlugField } from "@/components/admin/SlugField";
-import { UPLOAD_HINT } from "@/components/admin/UploadHint";
+import { IMAGE_FIELD_HINT } from "@/components/admin/UploadHint";
+import { MediaPickerField } from "@/components/admin/MediaPickerField";
+import { getStorageMode } from "@/server/storage";
 import { EditorSection as Section } from "@/components/admin/EditorSection";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { createPostAction, updatePostAction } from "@/server/actions/posts";
@@ -122,15 +123,12 @@ export async function PostEditor({ post }: { post?: Post }) {
           label="Feature on the home page"
           defaultChecked={post?.isFeatured ?? false}
         />
-        {/* TODO(Phase 7): replace with an image upload. */}
-        <TextField
+        <MediaPickerField
           name="coverImageUrl"
-          label="Cover image link"
-          type="url"
-          inputMode="url"
-          defaultValue={post?.coverImageUrl ?? ""}
-          placeholder="https://"
-          hint={UPLOAD_HINT}
+          label="Cover picture"
+          defaultValue={post?.coverImageUrl}
+          hint={IMAGE_FIELD_HINT}
+          mode={getStorageMode()}
         />
         <DateTimeField
           name="publishedAt"

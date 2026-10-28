@@ -26,6 +26,23 @@ const adminHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  images: {
+    // Uploaded files on Vercel Blob (public store) plus the raster brand and
+    // demo files. Everything else is rendered unoptimized (see SiteImage).
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
+        pathname: "/media/**",
+        search: "",
+      },
+    ],
+    localPatterns: [
+      { pathname: "/brand/**", search: "" },
+      { pathname: "/demo/**", search: "" },
+    ],
+    maximumRedirects: 0,
+  },
   async headers() {
     return [
       // Site-wide (listed first so the admin rules below win on conflicts).
@@ -39,6 +56,11 @@ const nextConfig: NextConfig = {
       { source: "/admin", headers: adminHeaders },
       { source: "/admin/:path*", headers: adminHeaders },
       { source: "/api/auth/:path*", headers: adminHeaders },
+      { source: "/api/admin/:path*", headers: adminHeaders },
+      {
+        source: "/api/uploads/:path*",
+        headers: [{ key: "X-Content-Type-Options", value: "nosniff" }],
+      },
     ];
   },
 };

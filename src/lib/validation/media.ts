@@ -36,17 +36,8 @@ const sortOrder = z.preprocess(
     .max(9999, SORT_ORDER_MSG),
 );
 
-/** Optional linked mission/event; blank means none. */
-const eventId = z
-  .preprocess(
-    (v) => (v == null || (typeof v === "string" && v.trim() === "") ? null : v),
-    idSchema.nullable(),
-  )
-  .transform((v) => v ?? null);
-
 const commonFields = {
   category: enumOf(MediaCategory),
-  eventId,
   sortOrder,
   titleEn: requiredText(160),
   titleNe: optionalText(160),

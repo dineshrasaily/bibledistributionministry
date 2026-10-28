@@ -27,7 +27,7 @@ export async function Header({ locale }: { locale: AppLocale }) {
             className="flex min-w-0 items-center gap-2.5 rounded-md"
           >
             {site.logoUrl ? (
-              // TODO(Phase 7): next/image + Blob
+              // logo stays <img>: fixed tiny size; header layout is user-customized
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={site.logoUrl}

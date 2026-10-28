@@ -206,37 +206,51 @@ export default async function MediaPage({ params }: PageProps) {
       >
         <div className="flex flex-col gap-12">
           {center.galleries.map((group) => {
-            const groupId = `gallery-${group.event?.id ?? "other"}`;
+            const groupId = `gallery-${group.id}`;
             return (
               <section
                 key={groupId}
                 aria-labelledby={groupId}
                 className="flex flex-col gap-4"
+                data-testid="photo-group"
               >
-                <h3
-                  id={groupId}
-                  className="font-serif text-xl font-semibold text-navy"
-                >
+                <div className="flex flex-col gap-1">
+                  <h3
+                    id={groupId}
+                    className="font-serif text-xl font-semibold text-navy"
+                  >
+                    {group.id === "other" ? t("otherPhotos") : group.title}
+                  </h3>
                   {group.event ? (
-                    <Link
-                      href={localizedHref(
-                        locale,
-                        `/missions/${group.event.slug}`,
-                      )}
-                      className="rounded-sm underline decoration-gold underline-offset-4 hover:decoration-2"
+                    <p className="text-base text-navy/80">
+                      <Link
+                        href={localizedHref(
+                          locale,
+                          `/missions/${group.event.slug}`,
+                        )}
+                        className="rounded-sm text-gold-dark underline decoration-gold underline-offset-4 hover:decoration-2"
+                      >
+                        {t("fromEvent", { title: group.event.title })}
+                      </Link>
+                    </p>
+                  ) : null}
+                  {group.description ? (
+                    <p
+                      lang={group.description.lang}
+                      className="max-w-prose text-base text-navy/80"
                     >
-                      {t("fromEvent", { title: group.event.title })}
-                    </Link>
-                  ) : (
-                    t("otherPhotos")
-                  )}
-                </h3>
+                      {group.description.text}
+                    </p>
+                  ) : null}
+                </div>
                 <PhotoGallery
                   photos={group.items.map((m) => ({
                     id: m.id,
                     url: m.image!.url,
                     alt: m.image!.alt,
                     caption: m.title,
+                    width: m.width,
+                    height: m.height,
                     openLabel: tLightbox("open", { alt: m.image!.alt }),
                   }))}
                   labels={galleryLabels}

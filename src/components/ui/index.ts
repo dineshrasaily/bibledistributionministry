@@ -13,3 +13,5 @@ export { Label } from "./Label";
 export { FieldError } from "./FieldError";
 export { Checkbox } from "./Checkbox";
 export { Select } from "./Select";
+export { SiteImage } from "./SiteImage";
+export type { SiteImageProps } from "./SiteImage";

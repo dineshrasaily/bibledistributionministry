@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { SiteImage } from "@/components/ui/SiteImage";
 
 const EMBED_PREFIX = "https://www.youtube-nocookie.com/embed/";
 
@@ -57,13 +58,12 @@ export function YouTubeFacade({
       className="group relative flex aspect-video w-full cursor-pointer items-center justify-center overflow-hidden bg-[linear-gradient(135deg,var(--color-navy)_0%,var(--color-navy-deep)_100%)] focus-visible:outline-offset-[-4px]"
     >
       {thumbnailUrl ? (
-        // TODO(Phase 7): next/image + Blob
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <SiteImage
           src={thumbnailUrl}
           alt=""
-          loading="lazy"
-          className="absolute inset-0 size-full object-cover opacity-80"
+          fill
+          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+          className="object-cover opacity-80"
         />
       ) : (
         <span

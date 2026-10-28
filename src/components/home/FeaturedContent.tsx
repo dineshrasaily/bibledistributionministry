@@ -5,6 +5,7 @@ import { Card, CardBody, CardMeta, CardTitle } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { SiteImage } from "@/components/ui/SiteImage";
 import type { AppLocale } from "@/i18n/routing";
 import type { FeaturedItem } from "@/lib/content";
 import { localizedHref } from "@/lib/i18n-path";
@@ -78,14 +79,15 @@ export async function FeaturedContent({
                 <li key={item.id} className="flex">
                   <Card as="article" className="w-full">
                     {entry.kind === "media" && entry.item.thumbnailUrl ? (
-                      // TODO(Phase 7): next/image + Blob
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={entry.item.thumbnailUrl}
-                        alt=""
-                        loading="lazy"
-                        className="aspect-video w-full object-cover"
-                      />
+                      <div className="relative aspect-video w-full overflow-hidden">
+                        <SiteImage
+                          src={entry.item.thumbnailUrl}
+                          alt=""
+                          fill
+                          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                          className="object-cover"
+                        />
+                      </div>
                     ) : isMedia ? (
                       <VideoPlaceholder label={tCommon("videoPlaceholder")} />
                     ) : (

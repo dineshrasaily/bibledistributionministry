@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { Event, MediaItem, Post } from "@/generated/prisma/client";
 import {
-  groupPhotoGalleries,
   mediaDisplayKind,
   safeEmbedUrl,
   toEventDetail,
   toMediaSummary,
   toMediaView,
   toPostDetail,
+  toPhotoGroups,
   toPostSummary,
 } from "./content-mappers";
 import { pick } from "./localize";
@@ -58,8 +58,15 @@ const media = (overrides: Partial<MediaItem> = {}): MediaItem => ({
   isFeatured: true,
   status: "PUBLISHED",
   isDemo: false,
-  eventId: null,
+  galleryId: null,
   sortOrder: 0,
+  storageDriver: null,
+  storageKey: null,
+  mimeType: null,
+  sizeBytes: null,
+  width: null,
+  height: null,
+  originalFilename: null,
   createdAt: created,
   updatedAt: created,
   ...overrides,
@@ -242,41 +249,81 @@ describe("toMediaView", () => {
   });
 });
 
-describe("groupPhotoGalleries", () => {
-  const photo = (id: string, eventId: string | null, sortOrder = 0) =>
-    toMediaView(
-      media({
-        id,
-        type: "IMAGE",
-        url: "/a.svg",
-        altTextEn: id,
-        eventId,
-        sortOrder,
-      }),
+// Phase 7: rewritten from groupPhotoGalleries (event links) to galleries.
+describe("toPhotoGroups", () => {
+  const photo = (id: string, sortOrder = 0, extra: Partial<MediaItem> = {}) =>
+    media({
+      id,
+      type: "IMAGE",
+      url: "/a.svg",
+      altTextEn: id,
+      sortOrder,
+      ...extra,
+    });
+  const gallery = (
+    id: string,
+    items: MediaItem[],
+    extra: Partial<{
+      event: Event | null;
+      descriptionEn: string | null;
+      descriptionNe: string | null;
+    }> = {},
+  ) => ({
+    id,
+    titleEn: `Gallery ${id}`,
+    titleNe: `ग्यालरी ${id}`,
+    descriptionEn: null,
+    descriptionNe: null,
+    event: null,
+    items,
+    ...extra,
+  });
+
+  it("keeps gallery order, sorts items by sortOrder and puts other photos last", () => {
+    const groups = toPhotoGroups(
+      [
+        gallery("g1", [photo("p1", 2), photo("p2", 1)], {
+          event: event({ slug: "trip", publishStatus: "PUBLISHED" }),
+        }),
+        gallery("g2", []),
+        gallery("g3", [photo("p3")]),
+      ],
+      [photo("p4")],
       "en",
     );
+    expect(groups.map((g) => g.id)).toEqual(["g1", "g3", "other"]);
+    expect(groups[0]!.items.map((i) => i.id)).toEqual(["p2", "p1"]);
+    expect(groups[0]!.event).toEqual({ title: "Trip", slug: "trip" });
+    expect(groups[0]!.title).toBe("Gallery g1");
+    expect(groups[2]!.items.map((i) => i.id)).toEqual(["p4"]);
+  });
 
-  it("groups by event in event order, sorts by sortOrder, and puts the rest last", () => {
-    const groups = groupPhotoGalleries(
+  it("drops photos without alt text and hides an unpublished event link", () => {
+    const groups = toPhotoGroups(
       [
-        photo("p1", "e2", 2),
-        photo("p2", null),
-        photo("p3", "e1"),
-        photo("p4", "e2", 1),
-        photo("p5", "unpublished-event"),
+        gallery("g1", [photo("p1"), photo("p2", 0, { altTextEn: null })], {
+          event: event({ publishStatus: "DRAFT" }),
+        }),
       ],
-      [
-        { id: "e1", title: "One", slug: "one" },
-        { id: "e2", title: "Two", slug: "two" },
-        { id: "e3", title: "Empty", slug: "empty" },
-      ],
+      [],
+      "en",
     );
-    expect(groups.map((g) => g.event?.slug ?? null)).toEqual([
-      "one",
-      "two",
-      null,
-    ]);
-    expect(groups[1]!.items.map((i) => i.id)).toEqual(["p4", "p1"]);
-    expect(groups[2]!.items.map((i) => i.id)).toEqual(["p2", "p5"]);
+    expect(groups[0]!.items.map((i) => i.id)).toEqual(["p1"]);
+    expect(groups[0]!.event).toBeNull();
+  });
+
+  it("localizes the title and falls back to the English description with lang", () => {
+    const [group] = toPhotoGroups(
+      [gallery("g1", [photo("p1")], { descriptionEn: "About this" })],
+      [],
+      "ne",
+    );
+    expect(group!.title).toBe("ग्यालरी g1");
+    expect(group!.description).toEqual({ text: "About this", lang: "en" });
+  });
+
+  it("exposes stored pixel sizes on the view", () => {
+    const view = toMediaView(photo("p1", 0, { width: 320, height: 240 }), "en");
+    expect([view.width, view.height]).toEqual([320, 240]);
   });
 });

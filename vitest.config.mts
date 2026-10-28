@@ -32,6 +32,7 @@ export default defineConfig({
           setupFiles: ["./src/test/setup.ts"],
           include: ["src/**/*.test.{ts,tsx}", "scripts/**/*.test.ts"],
           exclude: ["src/**/*.db.test.ts", "**/node_modules/**"],
+          env: { BLOB_READ_WRITE_TOKEN: "", VERCEL: "" },
         },
       },
       {
@@ -51,6 +52,9 @@ export default defineConfig({
             DIRECT_URL: MISSION_UNIT_URL,
             AUTH_SECRET: randomBytes(32).toString("base64"),
             TOTP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+            // Never real Vercel Blob calls from tests, whatever .env holds.
+            BLOB_READ_WRITE_TOKEN: "",
+            VERCEL: "",
           },
         },
       },

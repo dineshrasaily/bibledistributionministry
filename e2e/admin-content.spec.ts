@@ -77,7 +77,8 @@ test("validation errors show a summary and keep the entered values", async ({
   );
 });
 
-test("a photo linked to an event appears in its gallery, then is deleted", async ({
+// Phase 7: rewritten. Photos are linked to events through a gallery now.
+test("a photo in a gallery linked to an event appears on the event, then is gone", async ({
   page,
 }) => {
   const photoTitle = `E2E linked photo ${stamp}`;
@@ -88,39 +89,55 @@ test("a photo linked to an event appears in its gallery, then is deleted", async
     .getByLabel(/Image description \(alt text\) \(English\)/)
     .fill("E2E sample placeholder");
   await page.getByLabel(/^Category/).selectOption("GALLERY");
-  const eventSelect = page.getByLabel("Linked mission/event (optional)");
-  await expect(
-    eventSelect.locator("option", {
-      hasText: "Sample mission trip to a village community",
-    }),
-  ).toHaveCount(1);
-  await eventSelect.selectOption("event-1");
-  await page.getByLabel("Order in gallery").fill("1");
   await page.getByLabel(/Title \(English\)/).fill(photoTitle);
   await page.getByRole("button", { name: "Publish", exact: true }).click();
-  // Wait for the redirect away from /admin/media/new (the create finished).
   await expect(page).toHaveURL(/\/admin\/media\/(?!new\b)[a-z0-9]+/);
   await expect(page.getByTestId("toasts")).toContainText("Created.");
-  const editorUrl = page.url();
+
+  await page.goto("/admin/galleries/new?eventId=event-1");
+  await page
+    .getByLabel(/Title \(English\)/)
+    .fill(`E2E linked gallery ${stamp}`);
+  await expect(page.getByLabel("Linked mission/event (optional)")).toHaveValue(
+    "event-1",
+  );
+  await page.getByRole("button", { name: "Publish", exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/galleries\/(?!new\b)[a-z0-9-]+/);
+  await page.getByRole("button", { name: "Add pictures from library" }).click();
+  const dialog = page.getByTestId("gallery-add-dialog");
+  await dialog.getByLabel(photoTitle).check();
+  await dialog.getByRole("button", { name: /^Add 1 selected/ }).click();
+  await expect(page.getByTestId("toasts")).toContainText(
+    "Pictures added to the gallery.",
+  );
+  await expect(page.getByTestId("gallery-item")).toHaveCount(1);
 
   await page.goto("/en/missions/sample-mission-trip");
   await expect(
     page.getByRole("button", { name: "Open photo: E2E sample placeholder" }),
   ).toBeVisible();
 
-  await page.goto(editorUrl);
-  await page.getByRole("button", { name: "Delete media" }).click();
+  await page.goto(
+    `/admin/galleries?q=${encodeURIComponent(`E2E linked gallery ${stamp}`)}`,
+  );
+  await page.getByRole("button", { name: "Delete", exact: true }).click();
   await page
     .getByRole("alertdialog")
     .getByRole("button", { name: "Delete" })
     .click();
-  await expect(page).toHaveURL(/\/admin\/media(\?|$)/);
+  // The dialog hides the page from the a11y tree while open: wait for it.
+  await expect(page.getByRole("alertdialog")).toHaveCount(0);
+  await expect(
+    page.getByRole("link", {
+      name: `E2E linked gallery ${stamp}`,
+      exact: true,
+    }),
+  ).toHaveCount(0);
   await page.goto("/en/missions/sample-mission-trip");
   await expect(
     page.getByRole("button", { name: "Open photo: E2E sample placeholder" }),
   ).toHaveCount(0);
 });
-
 test("unpublishing from the list removes the update from /en", async ({
   page,
 }) => {

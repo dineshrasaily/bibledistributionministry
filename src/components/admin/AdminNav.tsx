@@ -14,7 +14,8 @@ const CONTENT: NavItem[] = [
   { href: "/admin/categories", label: "Categories" },
   { href: "/admin/verses", label: "Bible verses" },
   { href: "/admin/events", label: "Events & missions" },
-  { href: "/admin/media", label: "Media" },
+  { href: "/admin/media", label: "Media library" },
+  { href: "/admin/galleries", label: "Galleries" },
 ];
 const INBOX: NavItem[] = [
   { href: "/admin/inbox/prayer", label: "Prayer requests" },

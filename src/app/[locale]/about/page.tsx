@@ -7,6 +7,7 @@ import { DemoBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { MarkdownContent } from "@/components/ui/MarkdownContent";
+import { SiteImage } from "@/components/ui/SiteImage";
 import { routing, type AppLocale } from "@/i18n/routing";
 import {
   toAboutContent,
@@ -169,13 +170,15 @@ export default async function AboutPage({ params }: PageProps) {
             </div>
             {about.image ? (
               <figure className="mx-auto w-full max-w-sm rounded-lg bg-beige p-3">
-                {/* TODO(Phase 7): next/image + Blob */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={about.image.url}
-                  alt={about.image.alt}
-                  className="aspect-[4/5] w-full rounded-md bg-white object-contain"
-                />
+                <div className="relative aspect-[4/5] w-full overflow-hidden rounded-md bg-white">
+                  <SiteImage
+                    src={about.image.url}
+                    alt={about.image.alt}
+                    fill
+                    sizes="(min-width: 640px) 24rem, 100vw"
+                    className="object-contain"
+                  />
+                </div>
               </figure>
             ) : (
               // Decorative panel: no stock photography.

@@ -20,8 +20,10 @@ blob-report/
 playwright/.cache/
 playwright/.auth/
 
-# local Postgres data (npm run db:start)
+# local Postgres data (npm run db:start), local uploads (Phase 7 dev driver:
+# .local/uploads, .local/uploads-e2e) and backups
 .local/
+.local/uploads*/
 
 # generated Prisma client (prisma generate)
 src/generated/

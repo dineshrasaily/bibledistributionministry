@@ -9,12 +9,12 @@ import { cache } from "react";
 import type { Prisma } from "@/generated/prisma/client";
 import type { AppLocale } from "@/i18n/routing";
 import {
-  groupPhotoGalleries,
   toCategoryView,
   toEventDetail,
   toEventSummary,
   toMediaSummary,
   toMediaView,
+  toPhotoGroups,
   toPostDetail,
   toPostSummary,
   toVerseView,
@@ -275,6 +275,16 @@ export async function getMissions(
   };
 }
 
+const publishedPhoto = {
+  status: "PUBLISHED",
+  type: "IMAGE",
+} satisfies Prisma.MediaItemWhereInput;
+const galleryOrder = [
+  { sortOrder: "asc" },
+  { publishedAt: "asc" },
+  { id: "asc" },
+] satisfies Prisma.MediaItemOrderByWithRelationInput[];
+
 /** One published event (any lifecycle status) with its photo gallery. */
 export const getPublishedEventBySlug = cache(
   async (
@@ -285,23 +295,23 @@ export const getPublishedEventBySlug = cache(
     const row = await prisma.event.findFirst({
       where: { slug, publishStatus: "PUBLISHED" },
       include: {
-        media: {
-          where: { status: "PUBLISHED", type: "IMAGE" },
-          orderBy: [
-            { sortOrder: "asc" },
-            { publishedAt: "asc" },
-            { id: "asc" },
-          ],
+        // Only PUBLISHED photos of PUBLISHED galleries (drafts never leak).
+        galleries: {
+          where: { status: "PUBLISHED" },
+          orderBy: [{ publishedAt: "asc" }, { id: "asc" }],
+          include: { items: { where: publishedPhoto, orderBy: galleryOrder } },
         },
       },
     });
     if (!row) return null;
-    const { media, ...event } = row;
+    const { galleries, ...event } = row;
     return {
       ...toEventDetail(event, locale),
-      gallery: media
-        .map((m) => toMediaView(m, locale))
-        .filter((m) => m.image !== null),
+      gallery: galleries.flatMap((g) =>
+        g.items
+          .map((m) => toMediaView(m, locale))
+          .filter((m) => m.image !== null),
+      ),
     };
   },
 );
@@ -329,16 +339,34 @@ function mediaSection(item: MediaView): MediaSection {
 
 /** Published media grouped for the Media Center (newest first per section). */
 export async function getMediaCenter(locale: AppLocale): Promise<MediaCenter> {
-  const [rows, images] = await Promise.all([
+  const [rows, galleries, otherPhotos] = await Promise.all([
     prisma.mediaItem.findMany({
       where: { status: "PUBLISHED", type: { not: "IMAGE" } },
       orderBy: [{ publishedAt: "desc" }, { id: "asc" }],
       take: 200,
     }),
+    prisma.gallery.findMany({
+      where: { status: "PUBLISHED" },
+      orderBy: [
+        { publishedAt: { sort: "desc", nulls: "last" } },
+        { id: "asc" },
+      ],
+      take: MEDIA_SECTION_LIMIT,
+      include: {
+        event: true,
+        items: {
+          where: publishedPhoto,
+          orderBy: galleryOrder,
+          take: MEDIA_SECTION_LIMIT * 2,
+        },
+      },
+    }),
+    // "Other photos": published pictures outside any gallery (photos of a
+    // draft gallery are never shown here).
     prisma.mediaItem.findMany({
-      where: { status: "PUBLISHED", type: "IMAGE" },
+      where: { ...publishedPhoto, galleryId: null },
       orderBy: [{ publishedAt: "desc" }, { id: "asc" }],
-      take: 200,
+      take: MEDIA_SECTION_LIMIT * 2,
     }),
   ]);
 
@@ -355,28 +383,7 @@ export async function getMediaCenter(locale: AppLocale): Promise<MediaCenter> {
     if (list.length < MEDIA_SECTION_LIMIT) list.push(view);
   }
 
-  const photos = images
-    .map((m) => toMediaView(m, locale))
-    .filter((m) => m.image !== null);
-  const eventIds = [
-    ...new Set(photos.flatMap((p) => (p.eventId ? [p.eventId] : []))),
-  ];
-  const events =
-    eventIds.length === 0
-      ? []
-      : await prisma.event.findMany({
-          where: { id: { in: eventIds }, publishStatus: "PUBLISHED" },
-          orderBy: [{ startsAt: "desc" }, { id: "asc" }],
-        });
-  center.galleries = groupPhotoGalleries(
-    photos,
-    events.map((e) => {
-      const summary = toEventSummary(e, locale);
-      return { id: e.id, title: summary.title, slug: summary.slug };
-    }),
-  )
-    .slice(0, MEDIA_SECTION_LIMIT)
-    .map((g) => ({ ...g, items: g.items.slice(0, MEDIA_SECTION_LIMIT * 2) }));
+  center.galleries = toPhotoGroups(galleries, otherPhotos, locale);
   return center;
 }
 

@@ -8,7 +8,7 @@
 import { defaultSiteSettings } from "@/config/site";
 import { demoCategories } from "@/content/demo/categories";
 import { demoEvents } from "@/content/demo/events";
-import { demoMedia } from "@/content/demo/media";
+import { demoGalleries, demoMedia } from "@/content/demo/media";
 import { demoPosts } from "@/content/demo/posts";
 import type { MediaKind } from "@/content/demo/types";
 import { demoVerses } from "@/content/demo/verses";
@@ -131,6 +131,23 @@ export async function seedDemoContent(
     });
   }
 
+  // Galleries before the media that reference them.
+  for (const gallery of demoGalleries) {
+    await prisma.gallery.upsert({
+      where: { id: gallery.id },
+      update: {},
+      create: {
+        id: gallery.id,
+        titleEn: gallery.title.en,
+        titleNe: gallery.title.ne,
+        eventId: gallery.eventId,
+        status: "PUBLISHED",
+        publishedAt: new Date("2026-02-14T12:00:00.000Z"),
+        isDemo: true,
+      },
+    });
+  }
+
   for (const media of demoMedia) {
     const mapped = MEDIA_KIND_MAP[media.kind];
     await prisma.mediaItem.upsert({
@@ -153,7 +170,7 @@ export async function seedDemoContent(
         durationMinutes: media.durationMinutes,
         publishedAt: new Date(media.publishedAt),
         isFeatured: media.featured ?? false,
-        eventId: media.eventId ?? null,
+        galleryId: media.galleryId ?? null,
         sortOrder: media.sortOrder ?? 0,
         status: "PUBLISHED",
         isDemo: true,

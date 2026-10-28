@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { Badge, DemoBadge } from "@/components/ui/Badge";
 import { Card, CardBody, CardTitle } from "@/components/ui/Card";
+import { SiteImage } from "@/components/ui/SiteImage";
 import type { AppLocale } from "@/i18n/routing";
 import type { EventSummary } from "@/lib/content";
 import { localizedHref } from "@/lib/i18n-path";
@@ -40,14 +41,15 @@ export async function EventCard({
   return (
     <Card as="article" className="w-full bg-ivory" data-testid="event-card">
       {event.coverImageUrl ? (
-        // TODO(Phase 7): next/image + Blob
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={event.coverImageUrl}
-          alt=""
-          loading="lazy"
-          className="aspect-video w-full object-cover"
-        />
+        <div className="relative aspect-video w-full overflow-hidden">
+          <SiteImage
+            src={event.coverImageUrl}
+            alt=""
+            fill
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover"
+          />
+        </div>
       ) : null}
       <CardBody className="gap-4">
         <div className="flex items-start gap-4">

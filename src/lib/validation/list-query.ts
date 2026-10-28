@@ -13,6 +13,7 @@ type Filters = {
   status?: EnumValues;
   kind?: EnumValues;
   category?: EnumValues;
+  source?: EnumValues;
 };
 
 export type ListQuery<F extends Filters = Filters> = {

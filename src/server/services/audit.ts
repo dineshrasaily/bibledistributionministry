@@ -31,6 +31,30 @@ export function listAuditLogs(query: AuditListQuery) {
   );
 }
 
+/**
+ * One AuditLog row for an admin route handler (upload transfer / token
+ * routes). Server actions audit through runAdminAction instead. Metadata:
+ * ids, types, sizes and counts only.
+ */
+export async function recordAdminAudit(entry: {
+  actor: { id: string; email: string };
+  action: string;
+  entityType: string;
+  entityId?: string | null;
+  metadata?: Prisma.InputJsonValue;
+}): Promise<void> {
+  await prisma.auditLog.create({
+    data: {
+      actorId: entry.actor.id,
+      actorEmail: entry.actor.email,
+      action: entry.action,
+      entityType: entry.entityType,
+      entityId: entry.entityId ?? null,
+      ...(entry.metadata !== undefined ? { metadata: entry.metadata } : {}),
+    },
+  });
+}
+
 /** Distinct entity types, for the filter select. */
 export async function listAuditEntityTypes(): Promise<string[]> {
   const rows = await prisma.auditLog.findMany({

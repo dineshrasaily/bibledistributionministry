@@ -206,10 +206,10 @@ test.describe("as the owner", () => {
         "They will appear here when someone sends the prayer form.",
       ),
     ).toBeVisible();
-    // The media editor is honest about uploads.
+    // The media editor is honest about uploads (Phase 7: local driver in E2E).
     await page.goto("/admin/media/new");
     await expect(page.getByTestId("upload-note")).toContainText(
-      "Uploading pictures and videos arrives in a later update.",
+      "Upload pictures (JPEG, PNG or WebP, up to 8 MB)",
     );
   });
 });
