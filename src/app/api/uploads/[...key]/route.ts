@@ -64,7 +64,8 @@ async function serve(request: Request, context: Context, withBody: boolean) {
   const headers = new Headers({
     "Content-Type": contentType,
     "X-Content-Type-Options": "nosniff",
-    "Content-Security-Policy": "default-src 'none'; sandbox",
+    "Content-Security-Policy":
+      "default-src 'none'; sandbox; frame-ancestors 'none'",
     "Content-Disposition": "inline",
     "Cache-Control": "public, max-age=31536000, immutable",
     "Accept-Ranges": "bytes",

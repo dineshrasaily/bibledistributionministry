@@ -1,0 +1,26 @@
+{
+  "note": "Local production build (next start) on localhost, Desktop Chrome at 375x812, no throttling. Informational only.",
+  "recordedAt": "2026-10-28T17:06:15.815Z",
+  "results": {
+    "/en": {
+      "ttfbMs": 69,
+      "domContentLoadedMs": 187,
+      "loadMs": 409,
+      "firstContentfulPaintMs": 320,
+      "documentBytes": 19358,
+      "scriptCount": 10,
+      "scriptBytes": 181454,
+      "totalResourceBytes": 306391
+    },
+    "/ne": {
+      "ttfbMs": 10,
+      "domContentLoadedMs": 90,
+      "loadMs": 767,
+      "firstContentfulPaintMs": 428,
+      "documentBytes": 22726,
+      "scriptCount": 10,
+      "scriptBytes": 178454,
+      "totalResourceBytes": 608390
+    }
+  }
+}

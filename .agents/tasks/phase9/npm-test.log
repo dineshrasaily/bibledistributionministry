@@ -1,0 +1,58 @@
+﻿
+> mission-app@0.1.0 test
+> vitest --run
+
+
+ RUN  v5.0.5 C:/Users/rasaily/Downloads/mission app
+
+node.exe : Loaded Prisma 
+config from prisma.config.ts.
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~
+    + CategoryInfo          :  
+   NotSpecified: (Loaded Pris  
+  ma c...isma.config.ts.:Str   
+ ing) [], RemoteException
+    + FullyQualifiedErrorId :  
+   NativeCommandError
+ 
+
+Prisma schema loaded from 
+prisma\schema.prisma.
+Datasource "db": PostgreSQL database "mission_unit", schema "public" at "127.0.0.1:54329"
+
+5 migrations found in prisma/migrations
+
+Applying migration `20261026013432_init`
+Applying migration `20261027014222_phase3_about_fields_media_event`
+Applying migration `20261027025835_phase6_forms_inbox`
+Applying migration `20261027043846_phase7_media_galleries`
+Applying migration `20261028134952_phase8_donations`
+
+The following migration(s) have been applied:
+
+migrations/
+  ΓööΓöÇ 20261026013432_init/
+    ΓööΓöÇ migration.sql
+  ΓööΓöÇ 20261027014222_phase3_about_fields_media_event/
+    ΓööΓöÇ migration.sql
+  ΓööΓöÇ 20261027025835_phase6_forms_inbox/
+    ΓööΓöÇ migration.sql
+  ΓööΓöÇ 20261027043846_phase7_media_galleries/
+    ΓööΓöÇ migration.sql
+  ΓööΓöÇ 20261028134952_phase8_donations/
+    ΓööΓöÇ migration.sql
+
+All migrations have been successfully applied.
+
+ Test Files  97 passed (97)
+      Tests  1004 passed (1004)
+   Start at  13:13:54
+   Duration  197.34s (environment 42%, tests 37%, setup 13%, import 6%, transform 1%)
+

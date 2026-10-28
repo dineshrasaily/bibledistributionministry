@@ -66,6 +66,11 @@ const PURE_MODULES = [
   "src/lib/site-settings-mappers.ts",
   "src/lib/safe-next.ts",
   "src/lib/log.ts",
+  // Phase 9
+  "src/lib/og-image.ts",
+  "src/lib/security/headers.ts",
+  "src/lib/validation/zod-setup.ts",
+  "scripts/generate-brand-assets.ts",
   "src/config/site.ts",
   "src/config/social.ts",
   "src/server/errors.ts",

@@ -5,6 +5,7 @@
  * ("amountRequired", "amountTooSmall:5", ...), as in the Phase 6 forms.
  * The amount is decided here, on the server; the form only sends a choice.
  */
+import "./zod-setup";
 import { z } from "zod";
 import { DonationInterval, DonationStatus } from "@/generated/prisma/enums";
 import {

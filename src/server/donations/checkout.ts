@@ -86,11 +86,12 @@ export async function runCheckoutStart(
         };
       }
 
-      // 3. Giving must be open (keys set AND enabled in Settings).
+      // 3. Giving must be open (secret key + webhook secret set AND enabled
+      // in Settings).
       const config = resolveStripeConfig(deps.env);
       const settings = await getSiteSettings();
       const state = resolveGivingState({
-        checkoutReady: config.checkoutReady,
+        webhookReady: config.webhookReady,
         donationsEnabled: settings.donationsEnabled,
       });
       const client = state === "open" ? deps.getClient(deps.env) : null;

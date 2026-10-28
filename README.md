@@ -24,6 +24,10 @@ wording until the ministry's legal status has been verified.
 8. Donations in US dollars with Stripe Checkout (one-time and monthly),
    signature-verified idempotent webhook, owner-only donations page with
    totals and CSV export ✅
+9. Branding (app icons and social-share image from the logo, logo in the
+   footer and admin), security headers with a Content-Security-Policy on
+   every route, accessibility sweep, and the step-by-step deployment guide
+   ([Going live](#going-live-step-by-step-deployment-guide)) ✅
 
 ## Tech stack
 
@@ -116,47 +120,333 @@ phone. This keeps the site safe even if someone learns your password.
    30 seconds; if one is rejected, wait for the next one. If codes never
    work, check that the phone's clock is set automatically.
 
-## Switching to Neon (production on Vercel)
+## Going live: step-by-step deployment guide
 
-1. Create a Neon project. Copy its **pooled** URL (`DATABASE_URL`) and its
-   **direct** URL (`DIRECT_URL`).
-2. In Vercel, set `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`,
-   `TOTP_ENCRYPTION_KEY` and `NEXT_PUBLIC_SITE_URL` for the Production
-   environment. For the Preview environment use a Neon **branch's** URLs, so
-   preview deployments run their own migrations and never touch production
-   data.
-3. Vercel runs `vercel-build` (`prisma migrate deploy && next build`) on every
-   deploy.
-4. **Before the first deploy**, prepare the production database once, in a
-   separate PowerShell window with explicit variables. Never put these URLs
-   in your local `.env`, which must only hold local URLs (`db:migrate`,
-   `db:reset` and the tests refuse non-local URLs):
+This guide takes the site from your computer to the internet. It is written
+for someone who has never deployed a website. Do the steps in order. Each
+step says where to click and what you should see when it worked.
 
-   ```powershell
-   $env:DATABASE_URL="<pooled URL>"
-   $env:DIRECT_URL="<direct URL>"
-   $env:TOTP_ENCRYPTION_KEY="<exactly the same value as in Vercel>"
-   npm run db:deploy
-   npm run db:seed
-   npm run admin:create-owner -- --email you@example.org --name "Your Name"
-   ```
+No other cloud provider is needed. The services are: **Neon**
+(database), **Vercel** (hosting), **Vercel Blob** (pictures and audio),
+**Resend** (email notices), **Cloudflare Turnstile** (spam protection) and
+**Stripe** (donations). All of them have free or low-cost starter plans.
 
-   Then close that window. The order matters: `db:deploy` -> `db:seed` ->
-   `admin:create-owner`, then deploy. If you already deployed before seeding,
-   click "Redeploy" in Vercel afterwards; otherwise the statically built
-   pages stay empty until the next admin edit.
+### Step 0: What you need before you start
 
-`TOTP_ENCRYPTION_KEY` must be identical in the shell used for
-`create-owner` and in Vercel; changing it later invalidates every
-authenticator setup (each admin would need a 2FA reset).
+- A domain name (for example `your-ministry.org`) from any registrar, and
+  access to its DNS settings. You can go live on the free
+  `….vercel.app` address first and add the domain in step 10.
+- An email address you check often (all the accounts below use it).
+- About 2 hours, and your phone with your authenticator app.
+- The code in a **private** GitHub repository. Create one at github.com
+  (New → Repository → Private) and upload this project to it (GitHub Desktop
+  makes this point-and-click). This project never pushes code for you. The
+  `.env` file is git-ignored, so your local secrets are never uploaded.
+- A password manager (or a sealed paper note) for the secrets you generate.
+
+### Step 1: Create the database on Neon
+
+1. Sign up at neon.tech and click **Create project**. Name it after the
+   ministry, choose **Postgres 17** and a **US East** region (close to
+   Vercel's default region).
+2. Open the project's **Dashboard → Connect**. You'll see a connection
+   string. Copy two versions of it and keep them private:
+   - with **Connection pooling ON**: this is `DATABASE_URL` (the host
+     contains `-pooler`);
+   - with **Connection pooling OFF**: this is `DIRECT_URL`.
+3. Open **Branches → Create branch**, name it `preview`, and copy its pooled
+   and direct URLs too. Preview deployments use this branch so they can
+   never change your live data.
+
+You should see: a project with a `main` branch and a `preview` branch.
+
+### Step 2: Create the Vercel project
+
+1. Sign up at vercel.com with your GitHub account.
+2. Click **Add New → Project**, pick your private repository and click
+   **Import**. Vercel detects Next.js by itself.
+3. **Don't change the build command.** Vercel runs this project's
+   `vercel-build` script (`prisma migrate deploy && next build`), so database
+   updates are applied automatically on every deploy.
+4. Don't click Deploy yet if Vercel lets you skip it; if it deploys anyway
+   and fails, that's fine: it needs the variables from step 3.
+
+### Step 3: Add the environment variables in Vercel
+
+Open **Project → Settings → Environment Variables**. Add each variable,
+tick the environments shown, and click **Save**. Generate each secret with
+this command in PowerShell (run it once per secret; every run gives a new
+value):
+
+```powershell
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+| Variable                                                   | Required    | Production                                            | Preview                      | Where the value comes from |
+| ---------------------------------------------------------- | ----------- | ----------------------------------------------------- | ---------------------------- | -------------------------- |
+| `NEXT_PUBLIC_SITE_URL`                                     | yes         | `https://your-project.vercel.app` (later your domain) | leave unset                  | your site address          |
+| `DATABASE_URL`                                             | yes         | Neon `main` pooled URL                                | Neon `preview` pooled URL    | step 1                     |
+| `DIRECT_URL`                                               | yes         | Neon `main` direct URL                                | Neon `preview` direct URL    | step 1                     |
+| `AUTH_SECRET`                                              | yes         | a new generated secret                                | a different generated secret | the command above          |
+| `TOTP_ENCRYPTION_KEY`                                      | yes         | a new generated secret                                | a different generated secret | the command above          |
+| `BLOB_READ_WRITE_TOKEN`                                    | for uploads | added by Vercel in step 6                             | added by Vercel in step 6    | step 6                     |
+| `RESEND_API_KEY`                                           | for email   | Resend API key                                        | (optional)                   | step 7                     |
+| `RESEND_FROM_EMAIL`                                        | for email   | `notices@your-domain`                                 | (optional)                   | step 7                     |
+| `CONTACT_TO_EMAIL`                                         | optional    | who receives notices                                  | (optional)                   | your choice                |
+| `TURNSTILE_SITE_KEY`                                       | recommended | Turnstile site key                                    | (optional)                   | step 8                     |
+| `TURNSTILE_SECRET_KEY`                                     | recommended | Turnstile secret key                                  | (optional)                   | step 8                     |
+| `STRIPE_SECRET_KEY`                                        | for giving  | `sk_test_…`, later `sk_live_…`                        | `sk_test_…`                  | step 9                     |
+| `STRIPE_WEBHOOK_SECRET`                                    | for giving  | `whsec_…` of the matching endpoint                    | test endpoint's `whsec_…`    | step 9                     |
+| `STRIPE_CUSTOMER_PORTAL_URL`                               | optional    | portal login link                                     | (optional)                   | step 9                     |
+| `FORM_RATE_LIMIT_PER_HOUR`, `DONATION_RATE_LIMIT_PER_HOUR` | optional    | leave unset (defaults 5 and 10)                       | leave unset                  | n/a                        |
+
+Never add `LOCAL_UPLOAD_DIR`, `STRIPE_API_BASE_URL_FOR_TESTS`,
+`OWNER_PASSWORD`, `VERCEL`, `NODE_ENV` or `AUTH_URL` in Vercel.
+
+Important:
+
+- **`TOTP_ENCRYPTION_KEY` must never change** once the owner has signed in.
+  Changing it breaks every authenticator setup. Save it in your password
+  manager now, together with `AUTH_SECRET`.
+- No variable starting with `NEXT_PUBLIC_` may hold a secret (they are sent
+  to every visitor's browser). The only one here is the site address.
+- **After adding or changing any variable, redeploy** (Deployments → the
+  latest one → ⋯ → Redeploy). Variables only take effect on a new deploy.
+
+### Step 4: Prepare the production database (once)
+
+Do this **before the first successful deploy**, on your computer, in a
+**new** PowerShell window opened in the project folder. These commands talk
+to Neon directly. Never put these URLs in your local `.env` file: it must
+only ever hold local URLs (`db:migrate`, `db:reset` and the tests refuse
+non-local URLs on purpose).
+
+```powershell
+$env:DATABASE_URL="<Neon main pooled URL>"
+$env:DIRECT_URL="<Neon main direct URL>"
+$env:TOTP_ENCRYPTION_KEY="<exactly the same value as in Vercel Production>"
+npm run db:deploy
+npm run db:seed
+npm run admin:create-owner -- --email you@example.org --name "Your Name"
+```
+
+What happens:
+
+1. `db:deploy` creates the tables. You should see "All migrations have been
+   successfully applied".
+2. `db:seed` adds the demo content (the same "Demo Ministry" starter text
+   you had locally; you replace it in step 5 and before go-live).
+3. `admin:create-owner` asks for a password twice (hidden while you type; at
+   least 12 characters). **Use a different password from your local one.**
+   It then shows a QR code.
+4. **This is a new authenticator entry.** In your authenticator app tap "+"
+   → "Scan a QR code" and scan it. The new entry is also called
+   "Demo Ministry Admin" (it uses the ministry name stored in the
+   database), just like the one for your computer. Rename the new one to
+   "… (live site)" in the app so you can tell them apart, and **keep the old
+   one**: it still signs you in to `localhost`.
+5. Close the PowerShell window so the URLs and key don't linger.
+
+The order matters: `db:deploy` → `db:seed` → `admin:create-owner` → deploy.
+If you deployed before seeding, click **Redeploy** in Vercel afterwards;
+otherwise the pre-built pages stay empty until the next admin edit.
+
+### Step 5: First deploy and smoke test
+
+1. In Vercel, click **Deploy** (or **Redeploy**). Wait for "Ready".
+2. Open `https://your-project.vercel.app/en`: you should see the home page
+   with the demo banner. Open `/ne`: the Nepali home page.
+3. Open `/admin`, sign in with the email, the new password and the code from
+   the "(live site)" entry.
+4. **Settings**: set the ministry name and the logo (pick
+   `/brand/logo-mark.png`, or upload it after step 6), save, and check the
+   public header and footer. Leave the other boxes as they are for now.
+
+### Step 6: Setting up Vercel Blob (media uploads)
+
+Without a token, uploads in local development are saved under
+`.local/uploads` (git-ignored, not backed up). On Vercel without a token,
+uploads are switched off and the admin says so; pasted links keep working.
+
+1. In your Vercel project open **Storage → Create → Blob** and choose
+   **Public** access (the site shows the files directly to visitors).
+2. Connect the store to **Production** and **Preview** (and Development if
+   you want real uploads on your computer).
+3. Check that `BLOB_READ_WRITE_TOKEN` now appears under Project → Settings →
+   Environment Variables. Uploads from the browser need this token.
+4. Redeploy. The Media library's upload note should no longer say "not set
+   up yet".
+
+Files uploaded on your computer are **not** copied to Vercel Blob. Upload
+them again on the live site.
+
+### Step 7: Setting up Resend (email notices)
+
+1. Create a Resend account at resend.com and open **Domains → Add domain**.
+   Enter your domain (or a subdomain such as `mail.your-domain`).
+2. Resend shows a few DNS records (SPF/`TXT`, DKIM/`TXT`, and an `MX` for
+   the return path). Add each one at your domain registrar's DNS page,
+   exactly as shown.
+3. Back in Resend click **Verify**. It can take from minutes to a few hours;
+   wait until the domain says **Verified**.
+4. **API Keys → Create API key** with **Sending access** only. Copy it into
+   `RESEND_API_KEY` in Vercel (Production).
+5. Set `RESEND_FROM_EMAIL` to an address on the verified domain (for example
+   `notices@your-domain`) and optionally `CONTACT_TO_EMAIL`. Redeploy.
+6. Admin → **Inbox settings** should say "Resend configured". Send a test
+   prayer request from the public site: you should get an email with a link
+   only.
+
+The email only says that something new arrived and links to the admin
+inbox. It never contains the name, email address, subject or text.
+
+### Step 8: Setting up Cloudflare Turnstile (spam protection)
+
+Without keys the forms use Cloudflare's official always-pass **test** keys,
+so they work locally and in tests but do not stop bots.
+
+1. Create a free Cloudflare account and open **Turnstile** in the dashboard.
+2. **Add widget**: name it after the site, add **both** your
+   `your-project.vercel.app` address and your custom domain (and
+   `localhost` if you want to test real keys locally), mode "Managed".
+3. Copy the **site key** into `TURNSTILE_SITE_KEY` and the **secret key**
+   into `TURNSTILE_SECRET_KEY` in Vercel, then redeploy.
+4. In the admin, **Inbox settings** should now say "Cloudflare Turnstile
+   (live keys)".
+
+With live keys the token is verified on the server and the form **fails
+closed**: if Cloudflare can't be reached, the visitor is asked to try again.
+
+### Step 9: Setting up Stripe (donations)
+
+Until this is done the Support page shows a friendly "online giving is not
+set up yet" card with your contact email. Online giving opens only when
+**both** the secret key **and** the webhook signing secret are set, and
+"Donations are enabled" is ticked in Settings, so nobody can be charged for
+a gift the site can't record. Everything below starts in Stripe's **Test
+mode** (no real money).
+
+1. Create a Stripe account at stripe.com and keep the **Test mode** switch
+   on.
+2. **Developers → API keys**: copy the **Secret key** (`sk_test_…`) into
+   `STRIPE_SECRET_KEY` (Vercel: Project → Settings → Environment Variables;
+   locally: `.env`). There is no publishable key to copy.
+3. **Settings → Customer emails**: turn on **Successful payments** so Stripe
+   emails a receipt for every gift (this site does not send receipts).
+4. **Developers → Webhooks → Add endpoint**: URL
+   `https://<your-domain>/api/stripe/webhook`, events
+   `checkout.session.completed`, `invoice.paid`, `charge.refunded` and
+   `customer.subscription.deleted`. Copy the **Signing secret** (`whsec_…`)
+   into `STRIPE_WEBHOOK_SECRET`. Admin → **Donations** shows the exact URL
+   and says when the signing secret is still missing.
+5. Optional: **Settings → Billing → Customer portal**: activate the portal
+   and its **login link**, and put the link into
+   `STRIPE_CUSTOMER_PORTAL_URL`. Monthly donors then see "Manage or cancel a
+   monthly gift on Stripe"; without it they are asked to email you.
+6. Testing on your computer: install the Stripe CLI and run
+   `stripe listen --forward-to localhost:3000/api/stripe/webhook`. It prints
+   a `whsec_…` secret for your local `.env`. Pay with the test card
+   `4242 4242 4242 4242`, any future date and any CVC.
+7. Admin → **Settings → Donations**: tick **Donations are enabled** and write
+   **How gifts are used** (English, and Nepali if you can). Redeploy (or
+   restart `npm run dev`) after changing environment variables.
+8. **Going live**: switch Stripe to **Live mode**, create a live secret key
+   (`sk_live_…`) and a **separate live webhook endpoint** (same URL and the
+   same 4 events). The live endpoint has **its own signing secret**: copy
+   that one, not the test one. Put both into Vercel's **Production**
+   environment only (Preview keeps the test values) and redeploy.
+   Admin → Donations then says "Live mode key set". Test-mode gifts stay
+   marked **Test**.
+
+### Step 10: Your own domain
+
+1. Vercel → **Project → Settings → Domains → Add**, type your domain.
+2. Vercel shows one or two DNS records (an `A` record and/or a `CNAME`). Add
+   them at your registrar exactly as shown and wait until Vercel shows a
+   green check and "Valid configuration" (the HTTPS certificate is created
+   for you).
+3. Change `NEXT_PUBLIC_SITE_URL` (Production) to `https://your-domain` and
+   **redeploy**. This updates the links in search results and social shares
+   and switches on `upgrade-insecure-requests` in the security policy.
+4. Update the other services to the new address: the Stripe webhook URL
+   (test and live endpoints), the Turnstile widget's domains, and the Resend
+   sender (if it was on another domain).
+5. The site sends `Strict-Transport-Security` (HSTS) for two years, which
+   tells browsers to always use HTTPS. The `preload` option is deliberately
+   **off**: it puts the domain on a list built into browsers and is hard to
+   undo. Add it yourself only once you're sure every subdomain will always
+   have HTTPS.
+
+### Step 11: Backups
+
+- **Database (Neon)**: Neon keeps a point-in-time restore window (its
+  length depends on your plan; see **Project → Settings → Storage/History
+  retention**). To recover, use **Branches → Restore** (or create a branch
+  from a past time) and check the data there first.
+- **Monthly copy**: export the database with `pg_dump`. This project's
+  bundled Postgres has no `pg_dump.exe`, so install the **PostgreSQL 17
+  client tools** (the "Command Line Tools" option in the EDB Windows
+  installer), then in a new PowerShell window:
+
+  ```powershell
+  & "C:\Program Files\PostgreSQL\17\bin\pg_dump.exe" --format=custom --file="ministry-backup-$(Get-Date -Format yyyy-MM-dd).dump" "<Neon main DIRECT URL>"
+  ```
+
+  Keep the file somewhere **private and encrypted**: it contains prayer
+  requests and messages. Close the window afterwards.
+
+- **Pictures and audio (Vercel Blob)**: there is no automatic backup, so
+  keep your original files in a folder or cloud drive of your own.
+- **Donations**: Stripe keeps the payment records. Download the CSV from
+  Admin → Donations each month as well.
+- **Secrets**: keep `TOTP_ENCRYPTION_KEY` and `AUTH_SECRET` in your password
+  manager. Without the TOTP key a restored database can't verify anyone's
+  authenticator codes.
+
+### Step 12: Go-live checklist
+
+Tick every item before telling people about the site:
+
+- [ ] A qualified professional has reviewed the **Privacy Policy** and
+      **Terms** (they are templates). The privacy text names the one visitor
+      cookie (next-intl's session-only `NEXT_LOCALE` language preference); an
+      E2E test keeps that true.
+- [ ] The ministry's **tax status** is confirmed by a qualified professional
+      before ticking "Donation tax status has been verified" (it changes the
+      donation wording on the Support, thank-you and Terms pages). Until then
+      the site says gifts are not tax-deductible.
+- [ ] A **refund policy** is decided and added to the Terms.
+- [ ] **How gifts are used** is written in Settings (until then the Support
+      page shows sample text).
+- [ ] All **demo content** is replaced and "Demo site" is unticked in
+      Settings.
+- [ ] A **native speaker** has reviewed every Nepali text, including the
+      Nepali legal templates.
+- [ ] **Live keys** are set for Turnstile, Resend and Stripe, and the admin
+      status pages (Inbox settings, Donations) show them as configured.
+- [ ] The **Vercel Blob** store exists and any pictures uploaded on your
+      computer have been uploaded again.
+- [ ] A real **$5 gift** in live mode worked (it appears in Admin →
+      Donations) and you refunded it in the Stripe Dashboard.
+- [ ] The security headers are present. In PowerShell:
+      `curl.exe -sI https://your-domain/en` should list
+      `content-security-policy`, `strict-transport-security`,
+      `permissions-policy`, `referrer-policy`, `x-content-type-options` and
+      `x-frame-options`.
+- [ ] Unused **editor accounts** are deactivated (Admin → Users).
+- [ ] The backup routine from step 11 is in your calendar.
 
 ## Environment variables
 
-See `.env.example`. All are server-only except `NEXT_PUBLIC_*`.
+`.env.example` documents every variable (where to get it, which Vercel
+environments need it, and whether it is required). All are server-only
+except `NEXT_PUBLIC_SITE_URL`, which is the only `NEXT_PUBLIC_` variable (a
+unit test enforces this and that every variable the code reads is
+documented).
 
 | Variable               | Purpose                                                             |
 | ---------------------- | ------------------------------------------------------------------- |
-| `NEXT_PUBLIC_SITE_URL` | Public base URL (metadata, sitemap, robots)                         |
+| `NEXT_PUBLIC_SITE_URL` | Public base URL (metadata, sitemap, robots; https = CSP upgrade)    |
 | `DATABASE_URL`         | Postgres URL used by the app (Neon pooled URL in production)        |
 | `DIRECT_URL`           | Neon direct URL for migrations. Leave empty locally                 |
 | `AUTH_SECRET`          | Auth.js session encryption (32+ random bytes, base64)               |
@@ -180,9 +470,10 @@ Media uploads (Phase 7), both optional:
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob read-write token (public store). Empty locally = files go to `.local/uploads`; empty on Vercel = uploads are off |
 | `LOCAL_UPLOAD_DIR`      | Dev only: folder for locally stored uploads (default `.local/uploads`, never committed)                                      |
 
-Donations (Phase 8), all optional (without a secret key the Support page says
-"online giving is not set up yet"). All are server-only; there is no
-publishable key because card entry happens on Stripe's own page:
+Donations (Phase 8), all optional (giving opens only with both the secret
+key and the webhook signing secret; otherwise the Support page says "online
+giving is not set up yet"). All are server-only; there is no publishable key
+because card entry happens on Stripe's own page:
 
 | Variable                        | Purpose                                                                                                 |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------- |
@@ -192,87 +483,15 @@ publishable key because card entry happens on Stripe's own page:
 | `DONATION_RATE_LIMIT_PER_HOUR`  | Checkout attempts per network per hour (default 10; the E2E suite sets 100)                             |
 | `STRIPE_API_BASE_URL_FOR_TESTS` | Automated tests only: a loopback mock Stripe API, honoured only with a test key. Never set it in Vercel |
 
-### Setting up Stripe (donations)
+Set automatically or used by scripts only (never put them in `.env` or
+Vercel):
 
-Until this is done the Support page shows a friendly "online giving is not
-set up yet" card with your contact email. Everything below starts in Stripe's
-**Test mode** (no real money).
-
-1. Create a Stripe account at stripe.com and keep the **Test mode** switch
-   on.
-2. **Developers → API keys**: copy the **Secret key** (`sk_test_…`) into
-   `STRIPE_SECRET_KEY` (Vercel: Project → Settings → Environment Variables;
-   locally: `.env`). There is no publishable key to copy.
-3. **Settings → Customer emails**: turn on **Successful payments** so Stripe
-   emails a receipt for every gift (this site does not send receipts).
-4. **Developers → Webhooks → Add endpoint**: URL
-   `https://<your-domain>/api/stripe/webhook`, events
-   `checkout.session.completed`, `invoice.paid`, `charge.refunded` and
-   `customer.subscription.deleted`. Copy the **Signing secret** (`whsec_…`)
-   into `STRIPE_WEBHOOK_SECRET`. Admin → **Donations** shows the exact URL.
-5. Optional: **Settings → Billing → Customer portal**: activate the portal
-   and its **login link**, and put the link into
-   `STRIPE_CUSTOMER_PORTAL_URL`. Monthly donors then see "Manage or cancel a
-   monthly gift on Stripe"; without it they are asked to email you.
-6. Testing on your computer: install the Stripe CLI and run
-   `stripe listen --forward-to localhost:3000/api/stripe/webhook`. It prints
-   a `whsec_…` secret for your local `.env`. Pay with the test card
-   `4242 4242 4242 4242`, any future date and any CVC.
-7. Admin → **Settings → Donations**: tick **Donations are enabled** and write
-   **How gifts are used** (English, and Nepali if you can). Redeploy (or
-   restart `npm run dev`) after changing environment variables.
-8. Going live: switch Stripe to **Live mode**, create a live secret key and a
-   live webhook endpoint (same URL and events), put both into Vercel's
-   **Production** environment variables and redeploy. Admin → Donations then
-   says "Live mode key set". Test-mode gifts stay marked **Test**.
-
-### Setting up Vercel Blob (media uploads)
-
-Without a token, uploads in local development are saved under
-`.local/uploads` (git-ignored, not backed up). On Vercel without a token,
-uploads are switched off and the admin says so; pasted links keep working.
-Before going live:
-
-1. In your Vercel project open **Storage → Create → Blob** and choose
-   **Public** access (the site shows the files directly to visitors).
-2. Connect the store to **Production** and **Preview** (and Development if
-   you want real uploads on your computer).
-3. Check that `BLOB_READ_WRITE_TOKEN` now appears under Project → Settings →
-   Environment Variables. Uploads from the browser need this token.
-4. Redeploy. The Media library's upload note should no longer say "not set
-   up yet".
-
-Files uploaded on your computer are **not** copied to Vercel Blob. Upload
-them again on the live site.
-
-### Setting up Cloudflare Turnstile (spam protection)
-
-Without keys the forms use Cloudflare's official always-pass **test** keys,
-so they work locally and in tests but do not stop bots. Before going live:
-
-1. Create a free Cloudflare account and open **Turnstile** in the dashboard.
-2. **Add widget**: name it after the site, add your production domain (and
-   `localhost` if you want to test real keys locally), mode "Managed".
-3. Copy the **site key** into `TURNSTILE_SITE_KEY` and the **secret key**
-   into `TURNSTILE_SECRET_KEY` in Vercel (Project → Settings → Environment
-   Variables), then redeploy.
-4. In the admin, **Inbox settings** should now say "Cloudflare Turnstile
-   (live keys)".
-
-With live keys the token is verified on the server and the form **fails
-closed**: if Cloudflare can't be reached, the visitor is asked to try again.
-
-### Setting up Resend (email notices)
-
-1. Create a Resend account and **add your domain**; add the DNS records it
-   shows at your domain registrar and wait until the domain is verified.
-2. Create an **API key** (sending access only).
-3. Set `RESEND_API_KEY`, `RESEND_FROM_EMAIL` (an address on the verified
-   domain) and optionally `CONTACT_TO_EMAIL` in Vercel, then redeploy.
-4. **Inbox settings** should say "Resend configured".
-
-The email only says that something new arrived and links to the admin
-inbox. It never contains the name, email address, subject or text.
+| Variable         | Purpose                                                                                       |
+| ---------------- | --------------------------------------------------------------------------------------------- |
+| `OWNER_PASSWORD` | Optional, only in a one-off shell for `admin:create-owner` (otherwise it asks for a password) |
+| `VERCEL`         | Set by Vercel on its servers                                                                  |
+| `NODE_ENV`       | Set by Next.js                                                                                |
+| `AUTH_URL`       | Do not set: `trustHost` is on and Vercel provides the host                                    |
 
 ## Admin guide (for non-technical owners and editors)
 
@@ -370,7 +589,7 @@ email, password and authenticator code.
   minutes.
 - **Logging out signs you out on all devices.**
 - **Owner lost access?** Run `npm run admin:create-owner -- --email … --name
-"…" --reset` (against the production database as in "Switching to Neon").
+"…" --reset` (against the production database as in "Going live", step 4).
 
 ## Scripts
 
@@ -386,6 +605,7 @@ email, password and authenticator code.
 | `npm run test:e2e`                | Playwright E2E, a11y and screenshot specs on port 3210 (prepares its own DB) |
 | `npm run format` / `format:check` | Prettier write / check                                                       |
 | `npm run admin:create-owner`      | Create (or `--reset`) the single owner account                               |
+| `npm run brand:generate`          | Rebuild the app icons and social-share image from `public/brand/logo-*.png`  |
 
 ## Testing
 
@@ -417,9 +637,9 @@ email, password and authenticator code.
   bodies and passwords are never logged.
 - Markdown is sanitized on the server before display.
 - `/admin` is excluded from the locale proxy, the sitemap and robots, is
-  `noindex`, and sends `X-Frame-Options: DENY`, a restrictive
-  `Content-Security-Policy` (frame-ancestors, base-uri, form-action,
-  object-src), `Cache-Control: no-store` and related headers.
+  `noindex`, and sends the admin Content-Security-Policy (below),
+  `Referrer-Policy: same-origin`, `Cache-Control: no-store` and
+  `X-Robots-Tag: noindex, nofollow`.
 - The per-network sign-in limit (20 failed attempts per 15 minutes) keys on
   the first `x-forwarded-for` address. That is trustworthy on Vercel, which
   overwrites the header with the real client IP. On other hosts (or a bare
@@ -436,9 +656,6 @@ email, password and authenticator code.
   consented items can be published. Anonymous requests never store a name
   or email (cleared on the server too). Logs and email notices never
   contain names, emails, subjects or message text.
-- Phase 9's Content-Security-Policy must allow
-  `https://challenges.cloudflare.com` in `script-src` and `frame-src`
-  (Turnstile).
 - Uploads (Phase 7): the upload, token and library routes under
   `/api/admin/*` require a signed-in admin (same checks as `requireAdmin`)
   and, for uploads, a same-origin request (`Origin` must match; route
@@ -463,13 +680,46 @@ email, password and authenticator code.
   and CSV cells are guarded against formula injection.
   `STRIPE_API_BASE_URL_FOR_TESTS` only works with a test key and a
   loopback address, so it can never send a live key anywhere.
-- Phase 9's CSP: if it sets `form-action`, it must include
-  `https://checkout.stripe.com` (the checkout server action redirects there)
-  and `https://billing.stripe.com` (customer portal link).
-- Phase 9's CSP must allow `https://*.public.blob.vercel-storage.com` in
-  `img-src` and `media-src`, and `https://vercel.com/api/blob` in
-  `connect-src` (the only API host in the `@vercel/blob` 2.8.2 browser
-  client).
+- **Security headers (Phase 9)**, built in `src/lib/security/headers.ts`
+  and applied by `next.config.ts` to **every** route:
+  - `Strict-Transport-Security: max-age=63072000; includeSubDomains` (no
+    `preload`; see Going live, step 10). Browsers ignore it on `http://localhost`.
+  - `Referrer-Policy: strict-origin-when-cross-origin` (admin:
+    `same-origin`), `X-Content-Type-Options: nosniff`,
+    `X-Frame-Options: DENY` plus CSP `frame-ancestors 'none'` (nothing may
+    frame the site).
+  - `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()`.
+    Autoplay, fullscreen and clipboard-write are left alone so the YouTube
+    player and the copy-link button keep working.
+  - **Content-Security-Policy** (public site): `default-src 'self'`;
+    `script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com`
+    (Turnstile is the only third-party script); `style-src 'self'
+'unsafe-inline'`; `img-src 'self' data: blob: https:` and
+    `media-src 'self' blob: https:` (Vercel Blob files and any https picture
+    or audio link the owner pastes; images and audio can't run code);
+    `font-src 'self'` (fonts are self-hosted); `connect-src 'self'
+https://challenges.cloudflare.com`; `frame-src
+https://challenges.cloudflare.com https://www.youtube-nocookie.com`
+    (never `youtube.com`); `form-action 'self' https://checkout.stripe.com
+https://billing.stripe.com` (the no-JavaScript checkout form follows a
+    redirect to Stripe); `object-src 'none'`; `base-uri 'self'`;
+    `upgrade-insecure-requests` only when `NEXT_PUBLIC_SITE_URL` is https.
+    `next dev` additionally allows `'unsafe-eval'` and websockets (React
+    dev tools and hot reload); production builds never do.
+  - Admin, `/api/admin/*` and `/api/auth/*`: the same policy but with no
+    third-party script, `frame-src 'none'`, `form-action 'self'` and
+    `connect-src 'self' https://vercel.com` (the `@vercel/blob` browser
+    client uploads to `https://vercel.com/api/blob`).
+  - `/api/uploads/*`: `default-src 'none'; sandbox; frame-ancestors 'none'`.
+  - Why `'unsafe-inline'` for scripts: Next.js needs nonces to avoid it, and
+    nonces force every page to be rendered on each request (no static
+    pages, no caching). This site keeps its fast static pages instead; the
+    risk is contained because the only HTML that comes from content is
+    sanitized on the server (`src/lib/markdown.ts`) and no third-party
+    script host except Turnstile is allowed. Upgrade path: generate a nonce
+    in `src/proxy.ts`, pass it in the CSP, and make the pages dynamic.
+  - There is no CSP report endpoint (it would need a third-party collector).
+    Violations show in the browser console; the E2E suite fails on any.
 
 ## Project structure
 
@@ -528,28 +778,10 @@ navy 4.9:1, navy on gold (gold button) 4.9:1, dark gold on ivory 4.7:1, dark
 gold on white 5.0:1, white on red-700 (delete buttons) about 6.5:1. Gold on
 ivory/white is about 2.7:1, so it is decorative only.
 
-## Go-live checklist (so far)
+## Go-live checklist
 
-- Have the Privacy Policy and Terms templates reviewed by a qualified
-  professional; re-check them after Phase 6 (forms) and Phase 8 (donations).
-  The privacy text names the one visitor cookie (next-intl's session-only
-  `NEXT_LOCALE` language preference); an E2E test keeps that true.
-- Confirm the ministry's tax status with a qualified professional before
-  ticking "Donation tax status has been verified" (it changes the donation
-  wording on the Support, thank-you and Terms pages).
-- Donations: write **How gifts are used** in Settings (until then the
-  Support page shows sample text), decide a refund policy and add it to the
-  Terms, set up Stripe (see above) and switch it to Live mode.
-- Phase 9's Content-Security-Policy must allow
-  `frame-src https://www.youtube-nocookie.com` for the video player.
-- Set real Turnstile and Resend keys (see above) and check **Inbox
-  settings** shows "live keys" and "Resend configured". Re-read the Privacy
-  Policy against how the forms actually handle data.
-- Create the Vercel Blob store (Public) and re-upload any pictures you
-  uploaded locally.
-- Replace all demo content and untick "Demo site".
-- Have a native speaker review the Nepali text (including the Phase 3
-  strings and the Nepali legal templates).
+Moved into the deployment guide: see
+[Going live, step 12](#step-12-go-live-checklist).
 
 ## Roadmap
 
@@ -561,7 +793,27 @@ ivory/white is about 2.7:1, so it is decorative only.
 6. Prayer request and contact forms (Zod validation, Cloudflare Turnstile, email notifications via Resend) ✅
 7. Picture and audio uploads to Vercel Blob, media library and galleries ✅
 8. Donations in USD with Stripe (no tax-status claims until verified) ✅
-9. Hardening (full CSP, recovery codes) and deployment to Vercel
+9. Branding, hardening (CSP and security headers on every route) and the deployment guide ✅
+
+Later (not planned yet): admin recovery codes, a nonce-based CSP, automatic
+clean-up of unregistered uploads.
+
+## Known limitations (Phase 9)
+
+- The CSP allows inline scripts ('unsafe-inline', no nonces) so the
+  public pages can stay static; see Security notes for why and the upgrade
+  path.
+- There is no `favicon.ico`; browsers use the PNG icons (/icon.png,
+  /apple-icon.png). Very old browsers may show no icon.
+- Vercel's preview-deployment toolbar (`vercel.live`) is blocked by the CSP
+  on Preview deployments. Production is not affected.
+- Lighthouse is not run in CI. The E2E suite checks the same SEO and
+  best-practice items instead (one h1, title, description, lang, viewport,
+  canonical + hreflang, og:image, image alt text, no console errors, no
+  CSP violations, no sideways scrolling on phones).
+- Donation totals mix test and live gifts unless you filter by **Mode**.
+- A refund that Stripe reports before its gift is recorded is not linked to
+  that gift.
 
 ## Known limitations (Phase 8)
 

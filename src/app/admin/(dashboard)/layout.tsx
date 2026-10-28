@@ -15,9 +15,9 @@ export default async function DashboardLayout({
 }) {
   const actor = await getCurrentAdmin();
   if (!actor) return children;
-  const { ministryName } = await getSiteSettings();
+  const { ministryName, logoUrl } = await getSiteSettings();
   return (
-    <AdminShell actor={actor} siteName={ministryName}>
+    <AdminShell actor={actor} siteName={ministryName} logoUrl={logoUrl || null}>
       {children}
     </AdminShell>
   );

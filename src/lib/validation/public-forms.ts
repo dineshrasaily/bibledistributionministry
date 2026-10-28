@@ -5,6 +5,7 @@
  * "invalidEmail", "tooLong:<max>", ...), translated by the client form.
  * Text is sanitized before the length limits are checked.
  */
+import "./zod-setup";
 import { z } from "zod";
 import { MessageKind } from "@/generated/prisma/enums";
 import { sanitizePlainText, sanitizeSingleLine } from "@/lib/sanitize-text";

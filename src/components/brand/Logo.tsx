@@ -2,7 +2,8 @@ import { cn } from "@/lib/cn";
 
 /**
  * Placeholder mark: a slender navy cross in front of a gold ring of light.
- * Same motif as /public/logo.svg and the favicon.
+ * Same motif as /public/logo.svg. Used as the fallback when no logo is set
+ * in Settings (the app icons are generated from public/brand/logo-mark.png).
  */
 export function Logo({
   label,

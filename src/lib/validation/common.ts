@@ -1,6 +1,7 @@
 /**
  * Shared Zod helpers for admin inputs (FormData strings). Pure module.
  */
+import "./zod-setup";
 import { z } from "zod";
 
 export const REQUIRED_MSG = "Required";

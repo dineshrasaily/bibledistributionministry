@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { AdminRole } from "@/generated/prisma/enums";
-import { logoutAction } from "@/server/actions/auth";
 import { cn } from "@/lib/cn";
 
 type NavItem = { href: string; label: string };
@@ -121,14 +120,6 @@ export function AdminNav({
         pathname={pathname}
         onNavigate={onNavigate}
       />
-      <form action={logoutAction} className="px-0 pt-2">
-        <button
-          type="submit"
-          className="flex min-h-11 w-full items-center rounded-md px-3 text-left text-[0.95rem] text-white/80 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
-        >
-          Log out
-        </button>
-      </form>
     </nav>
   );
 }

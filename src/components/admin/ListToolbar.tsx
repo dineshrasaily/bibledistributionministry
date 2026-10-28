@@ -35,7 +35,7 @@ export function ListToolbar({
       className="mb-6 flex flex-col gap-4 rounded-lg border border-beige bg-white p-4 md:flex-row md:flex-wrap md:items-end"
     >
       {search ? (
-        <div className="min-w-0 md:flex-1">
+        <div className="min-w-0 md:min-w-[14rem] md:flex-1">
           <Label htmlFor="list-q">{searchLabel}</Label>
           <Input
             id="list-q"

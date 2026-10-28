@@ -68,7 +68,7 @@ export default async function SupportPage({ params }: PageProps) {
   ]);
   const config = resolveStripeConfig(process.env);
   const state = resolveGivingState({
-    checkoutReady: config.checkoutReady,
+    webhookReady: config.webhookReady,
     donationsEnabled: row.donationsEnabled,
   });
   const view = supportViewModel({

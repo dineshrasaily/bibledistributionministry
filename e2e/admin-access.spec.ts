@@ -1,15 +1,21 @@
 import { expect, test } from "@playwright/test";
 import { EDITOR_STATE, OWNER_STATE } from "./helpers/admin";
 
-/** The six exact admin headers; Cache-Control is checked separately (review NIT 6). */
+/**
+ * The exact admin headers; Cache-Control is checked separately (review NIT 6).
+ * Rewritten in Phase 9: the full admin CSP, HSTS and the wider
+ * Permissions-Policy (src/lib/security/headers.ts) replaced the Phase 5 set.
+ */
 const EXACT_HEADERS: Record<string, string> = {
   "x-frame-options": "DENY",
   "content-security-policy":
-    "frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'",
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob: https:; font-src 'self'; connect-src 'self' https://vercel.com; frame-src 'none'; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
   "x-content-type-options": "nosniff",
   "referrer-policy": "same-origin",
   "x-robots-tag": "noindex, nofollow",
-  "permissions-policy": "camera=(), microphone=(), geolocation=()",
+  "permissions-policy":
+    "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()",
+  "strict-transport-security": "max-age=63072000; includeSubDomains",
 };
 
 function expectAdminHeaders(headers: Record<string, string>) {
@@ -62,12 +68,18 @@ test.describe("signed out", () => {
     expectAdminHeaders(redirect.headers());
   });
 
+  // Rewritten in Phase 9: public pages now get XFO DENY and the site CSP
+  // (previously no X-Frame-Options), but not the admin-only headers.
   test("public pages get the site-wide headers only", async ({ request }) => {
     const response = await request.get("/en");
     const headers = response.headers();
     expect(headers["x-content-type-options"]).toBe("nosniff");
     expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
-    expect(headers["x-frame-options"]).toBeUndefined();
+    expect(headers["x-frame-options"]).toBe("DENY");
+    expect(headers["content-security-policy"]).toContain(
+      "frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com",
+    );
+    expect(headers["x-robots-tag"]).toBeUndefined();
   });
 
   test("unknown admin URLs return the admin 404", async ({ request, page }) => {

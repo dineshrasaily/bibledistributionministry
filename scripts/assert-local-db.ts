@@ -17,7 +17,7 @@ const LOCAL_HOSTS = new Set(["127.0.0.1", "localhost"]);
 
 function refuse(variable: string): never {
   throw new LocalDbGuardError(
-    `Refusing to run: ${variable} points to a non-local database. Destructive and test commands only run against the local Postgres. See README > Switching to Neon.`,
+    `Refusing to run: ${variable} points to a non-local database. Destructive and test commands only run against the local Postgres. See README > Going live (step 4).`,
   );
 }
 

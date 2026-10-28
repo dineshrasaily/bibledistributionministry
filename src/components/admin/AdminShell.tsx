@@ -1,10 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Logo } from "@/components/brand/Logo";
+import { SiteLogo } from "@/components/brand/SiteLogo";
 import type { AdminActor } from "@/server/auth/guards";
 import { AdminMobileNav } from "./AdminMobileNav";
 import { AdminNav } from "./AdminNav";
 import { FlashToast } from "./FlashToast";
+import { LogoutButton } from "./LogoutButton";
 import { SessionIndicator } from "./SessionIndicator";
 
 /**
@@ -14,10 +15,12 @@ import { SessionIndicator } from "./SessionIndicator";
 export function AdminShell({
   actor,
   siteName,
+  logoUrl,
   children,
 }: {
   actor: AdminActor;
   siteName: string;
+  logoUrl: string | null;
   children: ReactNode;
 }) {
   return (
@@ -31,12 +34,18 @@ export function AdminShell({
       <FlashToast />
 
       {/* Sidebar (lg+) */}
-      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col overflow-y-auto bg-navy-deep lg:flex">
+      {/* Three rows: brand + session, scrolling nav, pinned Log out (so it
+          stays reachable on short laptop screens). */}
+      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-navy-deep lg:flex">
         <Link
           href="/admin"
-          className="flex items-center gap-3 border-b border-white/10 px-5 py-4 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-gold"
+          className="flex shrink-0 items-center gap-3 border-b border-white/10 px-5 py-4 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-gold"
         >
-          <Logo decorative className="size-8" />
+          <SiteLogo
+            logoUrl={logoUrl}
+            className="h-8 w-auto max-w-[4.5rem]"
+            fallbackClassName="size-8"
+          />
           <span className="min-w-0">
             <span className="block truncate font-serif text-base font-semibold text-white">
               {siteName}
@@ -46,10 +55,18 @@ export function AdminShell({
             </span>
           </span>
         </Link>
-        <div className="border-b border-white/10 px-5 py-3">
+        <div className="shrink-0 border-b border-white/10 px-5 py-3">
           <SessionIndicator name={actor.name} role={actor.role} />
         </div>
-        <AdminNav role={actor.role} />
+        <div
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+          data-testid="admin-sidebar-scroll"
+        >
+          <AdminNav role={actor.role} />
+        </div>
+        <div className="shrink-0 border-t border-white/10 px-3 py-2">
+          <LogoutButton />
+        </div>
       </aside>
 
       {/* Top bar (< lg) */}
@@ -59,7 +76,11 @@ export function AdminShell({
           href="/admin"
           className="flex min-w-0 items-center gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-gold"
         >
-          <Logo decorative className="size-7" />
+          <SiteLogo
+            logoUrl={logoUrl}
+            className="h-7 w-auto max-w-[4rem]"
+            fallbackClassName="size-7"
+          />
           <span className="truncate font-serif text-base font-semibold text-white">
             {siteName} Admin
           </span>

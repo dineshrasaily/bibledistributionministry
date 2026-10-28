@@ -1,0 +1,132 @@
+﻿
+> mission-app@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.4.3 (Turbopack)
+- Environments: .env
+Γ£ô Running next.config.ts took 151ms
+
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 4.1s
+  Running TypeScript ...
+  Finished TypeScript in 5.3s ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/72) ...
+node.exe : {"level":"warn","eve
+nt":"turnstile.test_keys","note
+":"TURNSTILE_SITE_KEY/TURNSTILE
+_SECRET_KEY not set; using 
+Cloudflare test keys (no bot 
+challenge)."}
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~
+    + CategoryInfo          :  
+   NotSpecified: ({"level":"w  
+  arn"...t challenge)."}:Str   
+ ing) [], RemoteException
+    + FullyQualifiedErrorId :  
+   NativeCommandError
+ 
+  Generating static pages using 11 workers (18/72) 
+  Generating static pages using 11 workers (36/72) 
+  Generating static pages using 11 workers (54/72) 
+Γ£ô Generating static pages using 11 workers (72/72) in 2.4s
+  Finalizing page optimization ...
+
+Route (app)                                        Revalidate  Expire
+Γöî Γùï /_not-found
+Γö£   /[locale]
+Γöé Γö£ ΓùÅ /en                                                  1h      1y
+Γöé Γöö ΓùÅ /ne                                                  1h      1y
+Γö£ ╞Æ /[locale]/[...rest]
+Γö£   /[locale]/about
+Γöé Γö£ ΓùÅ /en/about
+Γöé Γöö ΓùÅ /ne/about
+Γö£   /[locale]/contact
+Γöé Γö£ ΓùÅ /en/contact
+Γöé Γöö ΓùÅ /ne/contact
+Γö£ ╞Æ /[locale]/devotionals
+Γö£   /[locale]/devotionals/[slug]
+Γöé Γö£ ΓùÅ /en/devotionals/sample-bible-study-john-3
+Γöé Γö£ ΓùÅ /en/devotionals/sample-devotional-here-i-am
+Γöé Γö£ ΓùÅ /en/devotionals/sample-devotional-shepherd
+Γöé Γöö ΓùÅ [+9 more paths]
+Γö£   /[locale]/media
+Γöé Γö£ ΓùÅ /en/media
+Γöé Γöö ΓùÅ /ne/media
+Γö£   /[locale]/missions
+Γöé Γö£ ΓùÅ /en/missions
+Γöé Γöö ΓùÅ /ne/missions
+Γö£   /[locale]/missions/[slug]
+Γöé Γö£ ΓùÅ /en/missions/sample-community-outreach
+Γöé Γö£ ΓùÅ /en/missions/sample-mission-trip
+Γöé Γö£ ΓùÅ /en/missions/sample-past-gathering
+Γöé Γöö ΓùÅ [+5 more paths]
+Γö£ ╞Æ /[locale]/prayer
+Γö£   /[locale]/privacy
+Γöé Γö£ ΓùÅ /en/privacy
+Γöé Γöö ΓùÅ /ne/privacy
+Γö£ ╞Æ /[locale]/support
+Γö£   /[locale]/support/cancelled
+Γöé Γö£ ΓùÅ /en/support/cancelled
+Γöé Γöö ΓùÅ /ne/support/cancelled
+Γö£ ╞Æ /[locale]/support/thank-you
+Γö£   /[locale]/terms
+Γöé Γö£ ΓùÅ /en/terms
+Γöé Γöö ΓùÅ /ne/terms
+Γö£ ╞Æ /admin
+Γö£ ╞Æ /admin/[...rest]
+Γö£ ╞Æ /admin/account
+Γö£ ╞Æ /admin/audit
+Γö£ ╞Æ /admin/categories
+Γö£ ╞Æ /admin/categories/[id]
+Γö£ ╞Æ /admin/donations
+Γö£ ╞Æ /admin/events
+Γö£ ╞Æ /admin/events/[id]
+Γö£ ╞Æ /admin/events/new
+Γö£ ╞Æ /admin/forbidden
+Γö£ ╞Æ /admin/galleries
+Γö£ ╞Æ /admin/galleries/[id]
+Γö£ ╞Æ /admin/galleries/new
+Γö£ ╞Æ /admin/inbox/messages
+Γö£ ╞Æ /admin/inbox/messages/[id]
+Γö£ ╞Æ /admin/inbox/prayer
+Γö£ ╞Æ /admin/inbox/prayer/[id]
+Γö£ ╞Æ /admin/inbox/settings
+Γö£ ╞Æ /admin/login
+Γö£ ╞Æ /admin/media
+Γö£ ╞Æ /admin/media/[id]
+Γö£ ╞Æ /admin/media/new
+Γö£ ╞Æ /admin/posts
+Γö£ ╞Æ /admin/posts/[id]
+Γö£ ╞Æ /admin/posts/new
+Γö£ ╞Æ /admin/settings
+Γö£ ╞Æ /admin/users
+Γö£ ╞Æ /admin/verses
+Γö£ ╞Æ /admin/verses/[id]
+Γö£ ╞Æ /admin/verses/new
+Γö£ ╞Æ /api/admin/donations/export
+Γö£ ╞Æ /api/admin/media/library
+Γö£ ╞Æ /api/admin/uploads/blob
+Γö£ ╞Æ /api/admin/uploads/local
+Γö£ ╞Æ /api/auth/[...nextauth]
+Γö£ ╞Æ /api/stripe/webhook
+Γö£ ╞Æ /api/uploads/[...key]
+Γö£ Γùï /apple-icon.png
+Γö£ Γùï /icon.png
+Γö£ Γùï /robots.txt
+Γöö Γùï /sitemap.xml                                           1h      1y
+
+
+╞Æ Proxy (Middleware)
+
+Γùï  (Static)   prerendered as static content
+ΓùÅ  (SSG)      prerendered as static HTML (uses generateStaticParams)
+╞Æ  (Dynamic)  server-rendered on demand
+

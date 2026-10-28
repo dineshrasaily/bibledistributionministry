@@ -4,6 +4,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useState } from "react";
 import type { AdminRole } from "@/generated/prisma/enums";
 import { AdminNav } from "./AdminNav";
+import { LogoutButton } from "./LogoutButton";
 
 /** Below lg: menu button opening the admin nav in a Radix Dialog (like MobileMenu). */
 export function AdminMobileNav({ role }: { role: AdminRole }) {
@@ -31,9 +32,9 @@ export function AdminMobileNav({ role }: { role: AdminRole }) {
         <Dialog.Overlay className="fixed inset-0 z-50 bg-navy/40" />
         <Dialog.Content
           aria-describedby={undefined}
-          className="fixed inset-y-0 left-0 z-50 flex w-[min(18rem,100%)] flex-col overflow-y-auto bg-navy-deep shadow-2xl focus:outline-none"
+          className="fixed inset-y-0 left-0 z-50 flex w-[min(18rem,100%)] flex-col bg-navy-deep shadow-2xl focus:outline-none"
         >
-          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+          <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-3">
             <Dialog.Title className="font-serif text-lg font-semibold text-white">
               Admin menu
             </Dialog.Title>
@@ -52,7 +53,12 @@ export function AdminMobileNav({ role }: { role: AdminRole }) {
               </svg>
             </Dialog.Close>
           </div>
-          <AdminNav role={role} onNavigate={() => setOpen(false)} />
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <AdminNav role={role} onNavigate={() => setOpen(false)} />
+          </div>
+          <div className="shrink-0 border-t border-white/10 px-3 py-2">
+            <LogoutButton />
+          </div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

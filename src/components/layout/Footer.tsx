@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Logo } from "@/components/brand/Logo";
+import { SiteLogo } from "@/components/brand/SiteLogo";
 import { DemoBadge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
 import { legalNav, mainNav } from "@/config/navigation";
@@ -23,17 +23,11 @@ export async function Footer({ locale }: { locale: AppLocale }) {
       <Container className="grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]">
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2.5">
-            {site.logoUrl ? (
-              // logo stays <img>: fixed tiny size; header layout is user-customized
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={site.logoUrl}
-                alt=""
-                className="size-10 shrink-0 object-contain"
-              />
-            ) : (
-              <Logo decorative className="size-10" />
-            )}
+            <SiteLogo
+              logoUrl={site.logoUrl}
+              className="h-12 w-auto max-w-[8rem]"
+              fallbackClassName="size-10"
+            />
             <p className="font-serif text-2xl font-semibold text-white">
               {site.name}
             </p>

@@ -88,7 +88,20 @@ async function StripeStatus() {
           { label: "Secret key", value: KEY_STATUS[config.secretKey] },
           {
             label: "Webhook signing secret",
-            value: config.webhookSecretSet ? "Set" : "Not set",
+            value:
+              config.checkoutReady && !config.webhookReady ? (
+                <>
+                  Not set.{" "}
+                  <span className="font-semibold">
+                    Online giving stays closed until the webhook signing secret
+                    is set.
+                  </span>
+                </>
+              ) : config.webhookSecretSet ? (
+                "Set"
+              ) : (
+                "Not set"
+              ),
           },
           {
             label: "Webhook URL for Stripe",

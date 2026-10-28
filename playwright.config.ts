@@ -28,6 +28,10 @@ const PUBLIC_SPECS = [
   "phase3-screenshots.spec.ts",
   // Phase 8 (no Stripe keys on this server: "not set up yet")
   "support.spec.ts",
+  // Phase 9 (read-only: headers/CSP, icons + OG image, full public sweep)
+  "security-headers.spec.ts",
+  "branding.spec.ts",
+  "phase9-public-sweep.spec.ts",
 ];
 
 export default defineConfig({
@@ -64,6 +68,8 @@ export default defineConfig({
         "upload-access.spec.ts",
         // Phase 8 (read-only: anonymous / editor rejections, empty owner view)
         "donation-access.spec.ts",
+        // Phase 9 (read-only: pinned Log out; never clicks it)
+        "admin-sidebar.spec.ts",
       ],
       dependencies: ["setup"],
       use: { ...devices["Desktop Chrome"] },
@@ -83,11 +89,17 @@ export default defineConfig({
         "prayer-form.spec.ts",
         "contact-form.spec.ts",
         "admin-inbox.spec.ts",
+        // Phase 9: logo from Settings (restored afterwards) + admin a11y sweep
+        // (after the inbox specs so the inbox has rows to open)
+        "admin-branding.spec.ts",
+        "phase9-admin-sweep.spec.ts",
         "phase6-screenshots.spec.ts",
         "phase7-screenshots.spec.ts",
         // Phase 8: mock Stripe API + a second server with test keys (:3211)
         "donations-checkout.spec.ts",
         "phase8-screenshots.spec.ts",
+        // Phase 9 screenshots (sets the logo, restores it afterwards)
+        "phase9-screenshots.spec.ts",
       ],
       dependencies: ["public", "admin-readonly"],
       fullyParallel: false,

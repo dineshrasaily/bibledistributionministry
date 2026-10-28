@@ -12,8 +12,9 @@ test("logging out ends the session; /admin then redirects to login (AC22)", asyn
     page.getByTestId("session-indicator").locator("visible=true"),
   ).toContainText("E2E Editor 2");
 
+  // Phase 9: Log out is pinned below the scrolling nav (outside <nav>).
   await page
-    .getByRole("navigation", { name: "Admin" })
+    .getByRole("complementary")
     .getByRole("button", { name: "Log out" })
     .click();
   await expect(page).toHaveURL(/\/admin\/login/);

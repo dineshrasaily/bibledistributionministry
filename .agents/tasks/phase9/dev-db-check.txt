@@ -1,0 +1,15 @@
+﻿{
+  "owners": 1,
+  "ministryName": "Bible Distribution Ministry",
+  "logoUrl": "/brand/logo-mark.png",
+  "donationsEnabled": false,
+  "taxDeductibleVerified": false,
+  "Post": 6,
+  "Event": 4,
+  "MediaItem": 3,
+  "PrayerRequest": 0,
+  "ContactMessage": 0,
+  "Gallery": 0,
+  "Donation": 0,
+  "StripeEvent": 0
+}

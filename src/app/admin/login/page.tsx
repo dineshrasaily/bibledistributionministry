@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/admin/LoginForm";
-import { Logo } from "@/components/brand/Logo";
+import { SiteLogo } from "@/components/brand/SiteLogo";
 import { getSiteSettings } from "@/lib/site-settings";
 import { safeNext } from "@/lib/safe-next";
 import { getCurrentAdmin } from "@/server/auth/guards";
@@ -16,14 +16,18 @@ export default async function LoginPage({ searchParams }: Props) {
   const params = await searchParams;
   const next = safeNext(params.next);
   if (await getCurrentAdmin()) redirect(next ?? "/admin");
-  const { ministryName } = await getSiteSettings();
+  const { ministryName, logoUrl } = await getSiteSettings();
   const changed = params.changed === "1";
 
   return (
     <main className="flex min-h-dvh items-center justify-center px-4 py-10">
       <div className="flex w-full max-w-md flex-col gap-6 rounded-lg border border-beige bg-white p-6 shadow-[0_8px_24px_-12px_rgba(20,28,47,0.18)] sm:p-8">
         <div className="flex flex-col items-center gap-3 text-center">
-          <Logo decorative className="size-11" />
+          <SiteLogo
+            logoUrl={logoUrl}
+            className="h-14 w-auto max-w-[10rem]"
+            fallbackClassName="size-11"
+          />
           <p className="font-serif text-lg font-semibold text-navy">
             {ministryName} Admin
           </p>

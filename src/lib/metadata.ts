@@ -3,6 +3,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { routing, type AppLocale } from "@/i18n/routing";
 import { localizedHref } from "./i18n-path";
+import { DEFAULT_OG_IMAGE } from "./og-image";
 import { getSiteSettings } from "./site-settings";
 
 /**
@@ -44,7 +45,11 @@ export function buildPageMetadata({
   languages["x-default"] = localizedHref(routing.defaultLocale, path);
   const ogLocale = (l: AppLocale) => (l === "ne" ? "ne_NP" : "en_US");
 
-  const hasImages = images !== undefined && images.length > 0;
+  // Cover images when the page has them, else the logo-based default.
+  const ogImages =
+    images !== undefined && images.length > 0
+      ? images
+      : [{ ...DEFAULT_OG_IMAGE, alt: siteName }];
   const common = {
     siteName,
     title,
@@ -52,7 +57,7 @@ export function buildPageMetadata({
     url: canonical,
     locale: ogLocale(locale),
     alternateLocale: routing.locales.filter((l) => l !== locale).map(ogLocale),
-    ...(hasImages ? { images } : {}),
+    images: ogImages,
   };
 
   return {
@@ -69,10 +74,10 @@ export function buildPageMetadata({
           }
         : { ...common, type: "website" },
     twitter: {
-      card: hasImages ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title,
       description,
-      ...(hasImages ? { images } : {}),
+      images: ogImages,
     },
   };
 }

@@ -12,6 +12,8 @@ import { getStripeClient, type StripeLike } from "./stripe-client";
 const IP = "198.51.100.23";
 const TEST_ENV = {
   STRIPE_SECRET_KEY: "sk_test_unit_fake",
+  // Phase 9: giving opens only when the webhook can record the gift too.
+  STRIPE_WEBHOOK_SECRET: "whsec_unit_fake",
   DONATION_RATE_LIMIT_PER_HOUR: "",
 };
 const CHECKOUT_URL = "https://checkout.stripe.com/c/pay/cs_test_unit_1";
@@ -95,6 +97,21 @@ describe("runCheckoutStart: checks before Stripe", () => {
       status: "error",
       code: "NOT_AVAILABLE",
     });
+    expect(create).not.toHaveBeenCalled();
+    expect(await allAttemptRows()).toEqual([]);
+  });
+
+  it("a secret key without a webhook signing secret: NOT_AVAILABLE, no Stripe call", async () => {
+    await settings(true);
+    expect(
+      await run(
+        giveForm(),
+        deps({
+          STRIPE_SECRET_KEY: "sk_test_unit_fake",
+          STRIPE_WEBHOOK_SECRET: "",
+        }),
+      ),
+    ).toEqual({ status: "error", code: "NOT_AVAILABLE" });
     expect(create).not.toHaveBeenCalled();
     expect(await allAttemptRows()).toEqual([]);
   });
@@ -247,6 +264,7 @@ describe("runCheckoutStart: Stripe Checkout", () => {
         giveForm(),
         deps({
           STRIPE_SECRET_KEY: "sk_live_unit_fake",
+          STRIPE_WEBHOOK_SECRET: TEST_ENV.STRIPE_WEBHOOK_SECRET,
           STRIPE_API_BASE_URL_FOR_TESTS: "http://127.0.0.1:3212",
         }),
       ),
