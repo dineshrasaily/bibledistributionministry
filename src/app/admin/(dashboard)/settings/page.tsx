@@ -124,7 +124,7 @@ async function SettingsForm() {
         />
         <MediaPickerField
           name="aboutImageUrl"
-          label="Photo (optional)"
+          label="Your photo (optional, shown on the Home and About pages)"
           defaultValue={s.aboutImageUrl}
           hint={`${IMAGE_FIELD_HINT} Choosing a library picture fills an empty photo description below.`}
           mode={mode}

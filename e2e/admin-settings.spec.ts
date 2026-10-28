@@ -3,6 +3,9 @@ import { OWNER_STATE } from "./helpers/admin";
 
 test.use({ storageState: OWNER_STATE });
 
+const ABOUT_PHOTO_LABEL =
+  "Your photo (optional, shown on the Home and About pages)";
+
 async function setMinistryName(page: Page, name: string) {
   await page.goto("/admin/settings");
   const field = page.getByLabel(/^Ministry name/);
@@ -67,13 +70,44 @@ test("an About photo without a description is a field error", async ({
 }) => {
   await page.goto("/admin/settings");
   await page
-    .getByLabel("Photo (optional)", { exact: true })
+    .getByLabel(ABOUT_PHOTO_LABEL, { exact: true })
     .fill("/brand/logo-full.png");
   await page.getByRole("button", { name: "Save settings" }).click();
   await expect(page.getByTestId("form-error-summary")).toBeVisible();
   await expect(
     page.getByLabel("Photo description (English)", { exact: true }),
   ).toHaveAttribute("aria-invalid", "true");
+});
+
+async function setAboutPhoto(page: Page, url: string, alt: string) {
+  await page.goto("/admin/settings");
+  await page.getByLabel(ABOUT_PHOTO_LABEL, { exact: true }).fill(url);
+  await page
+    .getByLabel("Photo description (English)", { exact: true })
+    .fill(alt);
+  await page.getByRole("button", { name: "Save settings" }).click();
+  await expect(page.getByTestId("toasts")).toContainText("Settings saved.");
+}
+
+test("the About photo replaces the cross panel on the home page", async ({
+  page,
+}) => {
+  const intro = () => page.locator('section[aria-labelledby="intro-title"]');
+  try {
+    await setAboutPhoto(page, "/brand/logo-full.png", "E2E founder photo");
+    for (const locale of ["en", "ne"]) {
+      await page.goto(`/${locale}`);
+      await expect(
+        intro().getByRole("img", { name: "E2E founder photo" }),
+      ).toBeVisible();
+      await expect(intro().locator('[aria-hidden="true"] svg')).toHaveCount(0);
+    }
+  } finally {
+    await setAboutPhoto(page, "", "");
+  }
+  // Without a photo the decorative panel comes back.
+  await page.goto("/en");
+  await expect(intro().locator('[aria-hidden="true"] svg')).toHaveCount(1);
 });
 
 test("an invalid social link is rejected with a field error", async ({
