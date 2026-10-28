@@ -106,6 +106,33 @@ describe("settingsSchema", () => {
     expect(parsed.goalsNe).toBeNull();
     expect(parsed.aboutImageUrl).toBeNull();
   });
+
+  it("Phase 8: 'how gifts are used' is optional Markdown up to 5000 characters", () => {
+    const empty = settingsSchema.parse(validSettings);
+    expect(empty.givingInfoEn).toBeNull();
+    expect(empty.givingInfoNe).toBeNull();
+    const parsed = settingsSchema.parse({
+      ...validSettings,
+      givingInfoEn: "Gifts help **print Bibles**.\n\n- one\n- two",
+      givingInfoNe: "  ",
+    });
+    expect(parsed.givingInfoEn).toBe(
+      "Gifts help **print Bibles**.\n\n- one\n- two",
+    );
+    expect(parsed.givingInfoNe).toBeNull();
+    expect(
+      settingsSchema.safeParse({
+        ...validSettings,
+        givingInfoEn: "x".repeat(5000),
+      }).success,
+    ).toBe(true);
+    const tooLong = settingsSchema.safeParse({
+      ...validSettings,
+      givingInfoNe: "x".repeat(5001),
+    });
+    expect(tooLong.success).toBe(false);
+    expect(tooLong.error?.issues[0]?.path).toEqual(["givingInfoNe"]);
+  });
 });
 
 // Phase 7: the media eventId link was replaced by galleries (rewritten test).

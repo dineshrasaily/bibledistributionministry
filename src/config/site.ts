@@ -52,4 +52,6 @@ export const defaultSiteSettings = {
   taxDeductibleVerified: false,
   isDemo: true,
   inboxRetentionMonths: 12,
+  givingInfoEn: null,
+  givingInfoNe: null,
 } satisfies Omit<SiteSettings, "id" | "updatedAt">;

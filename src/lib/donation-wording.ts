@@ -1,7 +1,8 @@
 /**
  * Donation tax wording, driven by SiteSettings.taxDeductibleVerified (OWNER
  * only). Never claims charitable status; even when verified it only says
- * gifts *may* qualify. Pure module (reused by the Phase 8 Support page).
+ * gifts *may* qualify. Pure module (Terms, Support and thank-you pages).
+ * All tax wording lives here: the message files must never contain it.
  */
 import type { AppLocale } from "@/i18n/routing";
 
@@ -24,4 +25,16 @@ export function donationTaxNote(
 ): string {
   const notes = NOTES[locale];
   return taxDeductibleVerified ? notes.verified : notes.unverified;
+}
+
+/**
+ * The tax line of the giving disclosure (Support and thank-you pages). Same
+ * text as the Terms (donationTaxNote), so all three pages always agree. The
+ * other disclosure lines make no tax claim and live in the message files.
+ */
+export function donationDisclosure(
+  locale: AppLocale,
+  taxDeductibleVerified: boolean,
+): { taxNote: string } {
+  return { taxNote: donationTaxNote(locale, taxDeductibleVerified) };
 }

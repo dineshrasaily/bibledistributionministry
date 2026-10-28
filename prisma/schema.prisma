@@ -89,6 +89,23 @@ enum ChallengePurpose {
 enum FormKind {
   PRAYER
   CONTACT
+  DONATION
+}
+
+enum DonationInterval {
+  ONE_TIME
+  MONTHLY
+}
+
+enum DonationStatus {
+  PAID
+  PARTIALLY_REFUNDED
+  REFUNDED
+}
+
+enum DonationSubscriptionStatus {
+  ACTIVE
+  CANCELED
 }
 
 enum PublicShareKind {
@@ -123,9 +140,11 @@ model SiteSettings {
   contactEmail          String
   socialLinks           Json     @default("[]") // SocialLink[] validated by Zod
   donationsEnabled      Boolean  @default(false)
-  taxDeductibleVerified Boolean  @default(false) // OWNER only; stored for future wording
+  taxDeductibleVerified Boolean  @default(false) // OWNER only; drives src/lib/donation-wording.ts
   isDemo                Boolean  @default(true) // drives site-wide DemoBanner + hero/intro DemoBadge
   inboxRetentionMonths  Int      @default(12) // 1..60 (Zod), OWNER only; used by the manual purge
+  givingInfoEn          String? // Markdown, "how gifts are used" (Support page); empty = demo text
+  givingInfoNe          String?
   updatedAt             DateTime @updatedAt
 }
 
@@ -401,6 +420,65 @@ model PublicShare {
   updatedAt        DateTime        @updatedAt
 
   @@index([publishedAt])
+}
+
+// ---------- donations (Phase 8, written only by the Stripe webhook) ----------
+
+/// One received gift. Deliberately NO card data of any kind (no brand, last4,
+/// expiry or billing address): Stripe keeps those; we keep reference ids.
+model Donation {
+  id                      String                @id @default(cuid())
+  amountCents             Int
+  currency                String                @default("usd")
+  interval                DonationInterval
+  status                  DonationStatus        @default(PAID)
+  amountRefundedCents     Int                   @default(0)
+  donorEmail              String? // lower-cased, max 254; from Stripe checkout/invoice
+  livemode                Boolean               @default(false)
+  stripeCheckoutSessionId String?               @unique
+  stripeInvoiceId         String?               @unique
+  stripePaymentIntentId   String?               @unique
+  stripeCustomerId        String?
+  subscriptionId          String?
+  subscription            DonationSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  paidAt                  DateTime
+  refundedAt              DateTime?
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+
+  @@index([paidAt])
+  @@index([status, paidAt])
+  @@index([interval, paidAt])
+}
+
+/// A monthly gift (Stripe subscription). Each month's payment is a Donation.
+model DonationSubscription {
+  id                   String                     @id @default(cuid())
+  stripeSubscriptionId String                     @unique
+  stripeCustomerId     String?
+  amountCents          Int
+  currency             String                     @default("usd")
+  status               DonationSubscriptionStatus @default(ACTIVE)
+  donorEmail           String?
+  livemode             Boolean
+  startedAt            DateTime
+  canceledAt           DateTime?
+  donations            Donation[]
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+
+  @@index([status])
+}
+
+/// Idempotency ledger: one row per processed Stripe event id (evt_...).
+model StripeEvent {
+  id          String   @id
+  type        String
+  livemode    Boolean
+  outcome     String // "processed" | "ignored"
+  processedAt DateTime @default(now())
+
+  @@index([processedAt])
 }
 
 /// Public form rate limit (per form, per hashed IP; never the raw IP).

@@ -12,6 +12,9 @@ const STYLES: Record<string, string> = {
   ARCHIVED: "border-navy/30 bg-white text-navy/80",
   ACTIVE: "border-navy bg-navy text-white",
   INACTIVE: "border-navy/30 bg-white text-navy/80",
+  PAID: "border-navy bg-navy text-white",
+  PARTIALLY_REFUNDED: "border-gold-dark bg-white text-gold-dark",
+  REFUNDED: "border-red-700 bg-white text-red-800",
 };
 
 const LABELS: Record<string, string> = {
@@ -26,6 +29,9 @@ const LABELS: Record<string, string> = {
   ARCHIVED: "Archived",
   ACTIVE: "Active",
   INACTIVE: "Inactive",
+  PAID: "Paid",
+  PARTIALLY_REFUNDED: "Partially refunded",
+  REFUNDED: "Refunded",
 };
 
 export function statusLabel(status: string): string {

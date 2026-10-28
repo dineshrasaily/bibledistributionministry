@@ -13,6 +13,7 @@ export default function proxy(req: NextRequest) {
 
 export const config = {
   // Skip API routes, the admin area, Next internals and files with an extension (assets).
+  // The Stripe webhook (/api/stripe/webhook) is therefore never localized or redirected.
   // Segment-anchored so /administration or /admins are still localized.
   matcher: "/((?!api(?:/|$)|admin(?:/|$)|trpc(?:/|$)|_next|_vercel|.*\\..*).*)",
 };

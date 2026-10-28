@@ -22,12 +22,29 @@ const SELF_GUARDED = new Set([
   "previewMarkdownAction",
   "changePasswordAction",
 ]);
-/** Public form actions: no session, but always the spam-protected pipeline. */
-const PUBLIC_ACTIONS = new Set(["submitPrayerAction", "submitContactAction"]);
+/**
+ * Public actions: no session, but always their protected pipeline
+ * (honeypot -> Zod -> rate limit -> ...), in a fixed file.
+ */
+const PUBLIC_ACTIONS = new Map([
+  [
+    "submitPrayerAction",
+    { file: "public-forms.ts", pipeline: "runPublicSubmission(" },
+  ],
+  [
+    "submitContactAction",
+    { file: "public-forms.ts", pipeline: "runPublicSubmission(" },
+  ],
+  [
+    "startCheckoutAction",
+    { file: "public-donations.ts", pipeline: "runCheckoutStart(" },
+  ],
+]);
 const PUBLIC_PIPELINE = path.join(
   ROOT,
   "src/server/forms/public-submission.ts",
 );
+const CHECKOUT_PIPELINE = path.join(ROOT, "src/server/donations/checkout.ts");
 
 const read = (file: string) => readFileSync(file, "utf8");
 const sourceFiles = (dir: string) =>
@@ -69,9 +86,10 @@ describe("server action guard coverage", () => {
           expect(body, name).toContain("requireAdmin(");
           continue;
         }
-        if (PUBLIC_ACTIONS.has(name)) {
-          expect(file, name).toBe("public-forms.ts");
-          expect(body, name).toContain("runPublicSubmission(");
+        const publicAction = PUBLIC_ACTIONS.get(name);
+        if (publicAction) {
+          expect(file, name).toBe(publicAction.file);
+          expect(body, name).toContain(publicAction.pipeline);
           continue;
         }
         expect(body, name).toContain("runAdminAction(");
@@ -91,11 +109,26 @@ describe("server action guard coverage", () => {
     expect(source).not.toContain('"use server"');
   });
 
-  it("public-forms.ts exports only the two public actions", () => {
+  it("public-forms.ts exports only the two public form actions", () => {
     const fns = exportedFunctions(
       read(path.join(ACTIONS_DIR, "public-forms.ts")),
     ).map((f) => f.name);
-    expect(fns.sort()).toEqual([...PUBLIC_ACTIONS].sort());
+    expect(fns.sort()).toEqual(
+      ["submitContactAction", "submitPrayerAction"].sort(),
+    );
+  });
+
+  it("public-donations.ts exports only startCheckoutAction", () => {
+    const fns = exportedFunctions(
+      read(path.join(ACTIONS_DIR, "public-donations.ts")),
+    ).map((f) => f.name);
+    expect(fns).toEqual(["startCheckoutAction"]);
+  });
+
+  it("checkout.ts is server-only and not a server action file", () => {
+    const source = read(CHECKOUT_PIPELINE);
+    expect(source).toContain('import "server-only"');
+    expect(source).not.toContain('"use server"');
   });
 
   it("services and the wrapper never redirect", () => {

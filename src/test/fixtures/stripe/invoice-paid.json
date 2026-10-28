@@ -1,0 +1,44 @@
+{
+  "id": "evt_test_invoice_paid",
+  "object": "event",
+  "api_version": "2026-09-30.endive",
+  "created": 1793000170,
+  "livemode": false,
+  "pending_webhooks": 1,
+  "request": {
+    "id": null,
+    "idempotency_key": null
+  },
+  "type": "invoice.paid",
+  "data": {
+    "object": {
+      "id": "in_test_monthly_1",
+      "object": "invoice",
+      "amount_due": 1234,
+      "amount_paid": 1234,
+      "currency": "usd",
+      "customer": "cus_test_donor2",
+      "customer_email": "Monthly@Example.org",
+      "livemode": false,
+      "parent": {
+        "type": "subscription_details",
+        "quote_details": null,
+        "subscription_details": {
+          "metadata": {
+            "app": "mission-site",
+            "interval": "MONTHLY",
+            "locale": "en"
+          },
+          "subscription": "sub_test_monthly_1"
+        }
+      },
+      "status": "paid",
+      "status_transitions": {
+        "finalized_at": 1793000150,
+        "paid_at": 1793000160,
+        "marked_uncollectible_at": null,
+        "voided_at": null
+      }
+    }
+  }
+}

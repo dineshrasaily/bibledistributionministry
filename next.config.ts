@@ -61,6 +61,15 @@ const nextConfig: NextConfig = {
         source: "/api/uploads/:path*",
         headers: [{ key: "X-Content-Type-Options", value: "nosniff" }],
       },
+      // Stripe webhook: machine-to-machine only.
+      {
+        source: "/api/stripe/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+        ],
+      },
     ];
   },
 };

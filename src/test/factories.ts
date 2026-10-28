@@ -161,6 +161,35 @@ export function makeGallery(
   });
 }
 
+/** Phase 8: donation rows (the webhook writes these in the app). */
+export function makeDonation(
+  data: Partial<Prisma.DonationUncheckedCreateInput> = {},
+) {
+  return prisma.donation.create({
+    data: {
+      amountCents: 2500,
+      interval: "ONE_TIME",
+      paidAt: new Date(),
+      stripePaymentIntentId: `pi_test_${next()}`,
+      ...data,
+    },
+  });
+}
+
+export function makeDonationSubscription(
+  data: Partial<Prisma.DonationSubscriptionUncheckedCreateInput> = {},
+) {
+  return prisma.donationSubscription.create({
+    data: {
+      stripeSubscriptionId: `sub_test_${next()}`,
+      amountCents: 1000,
+      livemode: false,
+      startedAt: new Date(),
+      ...data,
+    },
+  });
+}
+
 export function makeVerse(
   data: Partial<Prisma.BibleVerseUncheckedCreateInput> = {},
 ) {

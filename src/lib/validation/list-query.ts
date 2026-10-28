@@ -14,6 +14,10 @@ type Filters = {
   kind?: EnumValues;
   category?: EnumValues;
   source?: EnumValues;
+  // Phase 8 donations
+  period?: EnumValues;
+  interval?: EnumValues;
+  mode?: EnumValues;
 };
 
 export type ListQuery<F extends Filters = Filters> = {

@@ -1,0 +1,30 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    {
+      "severity": "LOW",
+      "confidence": "confirmed",
+      "label": "Giving opens without a webhook secret",
+      "detail": "resolveGivingState uses checkoutReady (secret key only), not webhookReady, so donors can pay while the webhook returns 503 and nothing is recorded. Gate the open state on webhookReady or warn on the Donations page when the key is set but the signing secret is not."
+    },
+    {
+      "severity": "LOW",
+      "confidence": "confirmed",
+      "label": "Test and live totals mixed by default",
+      "detail": "The Mode filter defaults to All, so after go-live the gross/net/count totals include test-mode gifts. Default to live when a live key is set, or label the totals."
+    },
+    {
+      "severity": "LOW",
+      "confidence": "likely",
+      "label": "Early refund dropped permanently",
+      "detail": "An unmatched charge.refunded is stored as ignored in the StripeEvent ledger, so it is never redelivered. If the gift is recorded later, or a monthly gift has a null payment intent, the refund never shows. Consider retrying (500) for refunds of our own gifts that are not recorded yet."
+    },
+    {
+      "severity": "LOW",
+      "confidence": "confirmed",
+      "label": "Narrow donor-email search box at 1280",
+      "detail": "With four filters the shared ListToolbar squeezes the search input on /admin/donations. Give it a minimum width. Cosmetic."
+    }
+  ],
+  "reviewDoc": "c:/Users/rasaily/Downloads/mission app/.agents/tasks/phase8/review.md"
+}

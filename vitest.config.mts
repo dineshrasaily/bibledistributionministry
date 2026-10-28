@@ -32,7 +32,15 @@ export default defineConfig({
           setupFiles: ["./src/test/setup.ts"],
           include: ["src/**/*.test.{ts,tsx}", "scripts/**/*.test.ts"],
           exclude: ["src/**/*.db.test.ts", "**/node_modules/**"],
-          env: { BLOB_READ_WRITE_TOKEN: "", VERCEL: "" },
+          env: {
+            BLOB_READ_WRITE_TOKEN: "",
+            VERCEL: "",
+            // Never real Stripe keys from .env in tests (tests use vi.stubEnv).
+            STRIPE_SECRET_KEY: "",
+            STRIPE_WEBHOOK_SECRET: "",
+            STRIPE_CUSTOMER_PORTAL_URL: "",
+            STRIPE_API_BASE_URL_FOR_TESTS: "",
+          },
         },
       },
       {
@@ -55,6 +63,11 @@ export default defineConfig({
             // Never real Vercel Blob calls from tests, whatever .env holds.
             BLOB_READ_WRITE_TOKEN: "",
             VERCEL: "",
+            // Never real Stripe keys or calls from tests.
+            STRIPE_SECRET_KEY: "",
+            STRIPE_WEBHOOK_SECRET: "",
+            STRIPE_CUSTOMER_PORTAL_URL: "",
+            STRIPE_API_BASE_URL_FOR_TESTS: "",
           },
         },
       },

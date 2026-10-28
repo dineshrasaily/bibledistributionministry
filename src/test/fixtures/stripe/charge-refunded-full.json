@@ -1,0 +1,39 @@
+{
+  "id": "evt_test_refund_full",
+  "object": "event",
+  "api_version": "2026-09-30.endive",
+  "created": 1793002000,
+  "livemode": false,
+  "pending_webhooks": 1,
+  "request": {
+    "id": null,
+    "idempotency_key": null
+  },
+  "type": "charge.refunded",
+  "data": {
+    "object": {
+      "id": "ch_test_payment_1",
+      "object": "charge",
+      "amount": 5000,
+      "amount_captured": 5000,
+      "amount_refunded": 5000,
+      "currency": "usd",
+      "customer": "cus_test_donor1",
+      "livemode": false,
+      "metadata": {},
+      "paid": true,
+      "payment_intent": "pi_test_payment_1",
+      "payment_method_details": {
+        "type": "card",
+        "card": {
+          "brand": "visa",
+          "last4": "4242",
+          "exp_month": 12,
+          "exp_year": 2034
+        }
+      },
+      "refunded": true,
+      "status": "succeeded"
+    }
+  }
+}

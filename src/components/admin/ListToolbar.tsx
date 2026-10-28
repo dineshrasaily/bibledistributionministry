@@ -8,6 +8,8 @@ export type ToolbarFilter = {
   label: string;
   value?: string;
   options: readonly { value: string; label: string }[];
+  /** Text of the empty option (default "All"); null = no empty option. */
+  allLabel?: string | null;
 };
 
 /** Plain GET form (works without JavaScript); values mirror searchParams. */
@@ -16,11 +18,13 @@ export function ListToolbar({
   q,
   filters = [],
   search = true,
+  searchLabel = "Search",
 }: {
   action: string;
   q?: string;
   filters?: ToolbarFilter[];
   search?: boolean;
+  searchLabel?: string;
 }) {
   return (
     <form
@@ -32,7 +36,7 @@ export function ListToolbar({
     >
       {search ? (
         <div className="min-w-0 md:flex-1">
-          <Label htmlFor="list-q">Search</Label>
+          <Label htmlFor="list-q">{searchLabel}</Label>
           <Input
             id="list-q"
             name="q"
@@ -51,7 +55,9 @@ export function ListToolbar({
             defaultValue={filter.value ?? ""}
             className="mt-1.5"
           >
-            <option value="">All</option>
+            {filter.allLabel === null ? null : (
+              <option value="">{filter.allLabel ?? "All"}</option>
+            )}
             {filter.options.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}

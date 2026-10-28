@@ -13,7 +13,7 @@ wording until the ministry's legal status has been verified.
 1. Design system ✅
 2. Layout + home page ✅
 3. Core public pages (About, Devotionals + detail, Missions + detail, Media
-   Center, Privacy, Terms) ✅ (Support is a placeholder until Phase 8)
+   Center, Privacy, Terms) ✅
 4. Database-backed content (Prisma 7 + PostgreSQL) ✅
 5. Secure admin (password + authenticator app, owner + max 3 editors) ✅
 6. Prayer request and contact forms (Turnstile, honeypot, rate limit,
@@ -21,6 +21,9 @@ wording until the ministry's legal status has been verified.
    purge) ✅
 7. Media uploads (pictures and audio, Vercel Blob in production and a local
    folder in development), media library, galleries, picture pickers ✅
+8. Donations in US dollars with Stripe Checkout (one-time and monthly),
+   signature-verified idempotent webhook, owner-only donations page with
+   totals and CSV export ✅
 
 ## Tech stack
 
@@ -177,7 +180,51 @@ Media uploads (Phase 7), both optional:
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob read-write token (public store). Empty locally = files go to `.local/uploads`; empty on Vercel = uploads are off |
 | `LOCAL_UPLOAD_DIR`      | Dev only: folder for locally stored uploads (default `.local/uploads`, never committed)                                      |
 
-Donations (Phase 8) have commented, empty placeholders in `.env.example`.
+Donations (Phase 8), all optional (without a secret key the Support page says
+"online giving is not set up yet"). All are server-only; there is no
+publishable key because card entry happens on Stripe's own page:
+
+| Variable                        | Purpose                                                                                                 |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `STRIPE_SECRET_KEY`             | Stripe secret key (`sk_test_…` while testing, `sk_live_…` when live). Empty = giving off                |
+| `STRIPE_WEBHOOK_SECRET`         | Webhook signing secret (`whsec_…`) of the endpoint `https://<your-domain>/api/stripe/webhook`           |
+| `STRIPE_CUSTOMER_PORTAL_URL`    | Optional Stripe customer portal login link (`https://billing.stripe.com/p/login/…`)                     |
+| `DONATION_RATE_LIMIT_PER_HOUR`  | Checkout attempts per network per hour (default 10; the E2E suite sets 100)                             |
+| `STRIPE_API_BASE_URL_FOR_TESTS` | Automated tests only: a loopback mock Stripe API, honoured only with a test key. Never set it in Vercel |
+
+### Setting up Stripe (donations)
+
+Until this is done the Support page shows a friendly "online giving is not
+set up yet" card with your contact email. Everything below starts in Stripe's
+**Test mode** (no real money).
+
+1. Create a Stripe account at stripe.com and keep the **Test mode** switch
+   on.
+2. **Developers → API keys**: copy the **Secret key** (`sk_test_…`) into
+   `STRIPE_SECRET_KEY` (Vercel: Project → Settings → Environment Variables;
+   locally: `.env`). There is no publishable key to copy.
+3. **Settings → Customer emails**: turn on **Successful payments** so Stripe
+   emails a receipt for every gift (this site does not send receipts).
+4. **Developers → Webhooks → Add endpoint**: URL
+   `https://<your-domain>/api/stripe/webhook`, events
+   `checkout.session.completed`, `invoice.paid`, `charge.refunded` and
+   `customer.subscription.deleted`. Copy the **Signing secret** (`whsec_…`)
+   into `STRIPE_WEBHOOK_SECRET`. Admin → **Donations** shows the exact URL.
+5. Optional: **Settings → Billing → Customer portal**: activate the portal
+   and its **login link**, and put the link into
+   `STRIPE_CUSTOMER_PORTAL_URL`. Monthly donors then see "Manage or cancel a
+   monthly gift on Stripe"; without it they are asked to email you.
+6. Testing on your computer: install the Stripe CLI and run
+   `stripe listen --forward-to localhost:3000/api/stripe/webhook`. It prints
+   a `whsec_…` secret for your local `.env`. Pay with the test card
+   `4242 4242 4242 4242`, any future date and any CVC.
+7. Admin → **Settings → Donations**: tick **Donations are enabled** and write
+   **How gifts are used** (English, and Nepali if you can). Redeploy (or
+   restart `npm run dev`) after changing environment variables.
+8. Going live: switch Stripe to **Live mode**, create a live secret key and a
+   live webhook endpoint (same URL and events), put both into Vercel's
+   **Production** environment variables and redeploy. Admin → Donations then
+   says "Live mode key set". Test-mode gifts stay marked **Test**.
 
 ### Setting up Vercel Blob (media uploads)
 
@@ -283,6 +330,17 @@ email, password and authenticator code.
   content (post bodies, categories, gallery placeholders, a silent audio
   sample) to a local database. It only creates missing rows and never
   overwrites your edits; existing demo posts keep their current text.
+- **Donations** (owner only): every gift Stripe reports, newest first, with
+  filters (period, one-time/monthly, status, live/test, donor email),
+  totals for the chosen period (gross, refunded, net, one-time, monthly,
+  active monthly gifts), the Stripe connection status and **Export CSV**.
+  Periods are calendar months/years in **UTC**. Editors can't open this
+  page or the export: donor emails and amounts are financial personal data
+  and editors don't need them for content work. A **Test** badge marks gifts
+  made with Stripe test keys. Refunds are made in the Stripe Dashboard and
+  show up here automatically. The CSV opens in Excel; a cell that starts
+  with `=`, `+`, `-` or `@` gets a leading `'` on purpose so spreadsheets
+  never run it as a formula.
 - **Users** (owner only): add up to **3 editors**. To add a fourth, deactivate
   one first. "Reset 2FA" makes an editor set up their authenticator app again
   (use it when they change phones). "Set temporary password" helps an editor
@@ -393,6 +451,21 @@ email, password and authenticator code.
   `..`, no links outside the folder), `nosniff` and a sandboxing CSP. Public
   file URLs are hard to guess but **public**: anyone with the link can see
   the file.
+- Donations (Phase 8): no card data ever reaches this server or the browser
+  bundle (Stripe Checkout, no Stripe.js). Amounts are decided on the server
+  ($5 to $10,000, USD only) and the checkout action is rate limited per
+  hashed network address. The webhook verifies Stripe's signature on the raw
+  body bytes, stores each event id once (`StripeEvent`) and upserts on
+  unique Stripe ids, so re-sent events never double-count; it ignores
+  objects not created by this site and non-USD amounts. The `Donation`
+  table has no card fields at all. The donations page and CSV export are
+  OWNER only (editors get 403), the export is audit-logged without emails,
+  and CSV cells are guarded against formula injection.
+  `STRIPE_API_BASE_URL_FOR_TESTS` only works with a test key and a
+  loopback address, so it can never send a live key anywhere.
+- Phase 9's CSP: if it sets `form-action`, it must include
+  `https://checkout.stripe.com` (the checkout server action redirects there)
+  and `https://billing.stripe.com` (customer portal link).
 - Phase 9's CSP must allow `https://*.public.blob.vercel-storage.com` in
   `img-src` and `media-src`, and `https://vercel.com/api/blob` in
   `connect-src` (the only API host in the `@vercel/blob` 2.8.2 browser
@@ -461,8 +534,12 @@ ivory/white is about 2.7:1, so it is decorative only.
   professional; re-check them after Phase 6 (forms) and Phase 8 (donations).
   The privacy text names the one visitor cookie (next-intl's session-only
   `NEXT_LOCALE` language preference); an E2E test keeps that true.
-- Confirm the ministry's tax status before ticking "Donation tax status has
-  been verified" (it changes the donation wording in the Terms).
+- Confirm the ministry's tax status with a qualified professional before
+  ticking "Donation tax status has been verified" (it changes the donation
+  wording on the Support, thank-you and Terms pages).
+- Donations: write **How gifts are used** in Settings (until then the
+  Support page shows sample text), decide a refund policy and add it to the
+  Terms, set up Stripe (see above) and switch it to Live mode.
 - Phase 9's Content-Security-Policy must allow
   `frame-src https://www.youtube-nocookie.com` for the video player.
 - Set real Turnstile and Resend keys (see above) and check **Inbox
@@ -483,8 +560,21 @@ ivory/white is about 2.7:1, so it is decorative only.
 5. Auth and admin: one OWNER plus up to 3 EDITOR accounts ✅
 6. Prayer request and contact forms (Zod validation, Cloudflare Turnstile, email notifications via Resend) ✅
 7. Picture and audio uploads to Vercel Blob, media library and galleries ✅
-8. Donations in USD with Stripe (no tax-status claims until verified)
+8. Donations in USD with Stripe (no tax-status claims until verified) ✅
 9. Hardening (full CSP, recovery codes) and deployment to Vercel
+
+## Known limitations (Phase 8)
+
+- Donations are US dollars and cards only (including Apple Pay and Google
+  Pay, which are card wallets). Other currencies and bank methods are
+  ignored by the webhook.
+- Totals and periods use UTC, so a gift late in the evening in Nepal or the
+  US can count in the next/previous day or month.
+- Refunds are made in the Stripe Dashboard, not in the admin.
+- The thank-you page does not confirm a specific payment (it never calls
+  Stripe); Stripe's receipt email is the confirmation.
+- Monthly donors change or cancel only through the Stripe portal link (if
+  set) or by emailing you.
 
 ## Known limitations (Phase 7)
 

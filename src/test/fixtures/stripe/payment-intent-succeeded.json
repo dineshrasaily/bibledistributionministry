@@ -1,0 +1,28 @@
+{
+  "id": "evt_test_pi_succeeded",
+  "object": "event",
+  "api_version": "2026-09-30.endive",
+  "created": 1793000050,
+  "livemode": false,
+  "pending_webhooks": 1,
+  "request": {
+    "id": null,
+    "idempotency_key": null
+  },
+  "type": "payment_intent.succeeded",
+  "data": {
+    "object": {
+      "id": "pi_test_payment_1",
+      "object": "payment_intent",
+      "amount": 5000,
+      "currency": "usd",
+      "livemode": false,
+      "metadata": {
+        "app": "mission-site",
+        "interval": "ONE_TIME",
+        "locale": "en"
+      },
+      "status": "succeeded"
+    }
+  }
+}

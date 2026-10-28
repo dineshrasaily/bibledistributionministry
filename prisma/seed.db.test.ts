@@ -30,6 +30,13 @@ describe("seedDemoContent", () => {
     expect(await prisma.postCategory.count()).toBe(5);
   });
 
+  it("Phase 8: never seeds donation data (no fabricated figures)", async () => {
+    await seedDemoContent(prisma);
+    expect(await prisma.donation.count()).toBe(0);
+    expect(await prisma.donationSubscription.count()).toBe(0);
+    expect(await prisma.stripeEvent.count()).toBe(0);
+  });
+
   // Phase 7: rewritten for the Gallery model (was MediaItem.eventId).
   it("puts the demo photos in the past gathering's gallery, in order", async () => {
     await seedDemoContent(prisma);

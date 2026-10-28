@@ -14,12 +14,14 @@ const deny = (status: number, error: string) =>
  * JSON error Response to return as-is:
  * - 401 UNAUTHENTICATED without a valid session (deactivated users and
  *   bumped sessionVersions are rejected, as in requireAdmin);
+ * - 403 FORBIDDEN for owner-only routes (`role: "OWNER"`) called by an
+ *   editor;
  * - 403 FORBIDDEN_ORIGIN for mutations that are not same-origin (route
  *   handlers get no built-in CSRF check, unlike server actions).
  */
 export async function requireAdminRoute(
   request: Request,
-  { mutation }: { mutation: boolean },
+  { mutation, role }: { mutation: boolean; role?: "OWNER" },
 ): Promise<AdminActor | Response> {
   const url = new URL(request.url);
   const actor = await getCurrentAdmin();
@@ -29,6 +31,13 @@ export async function requireAdminRoute(
       code: "UNAUTHENTICATED",
     });
     return deny(401, "UNAUTHENTICATED");
+  }
+  if (role === "OWNER" && actor.role !== "OWNER") {
+    log.warn("admin.route.denied", {
+      path: url.pathname,
+      code: "FORBIDDEN",
+    });
+    return deny(403, "FORBIDDEN");
   }
   if (mutation && !isSameOrigin(request.headers, url.origin)) {
     log.warn("admin.route.denied", {

@@ -68,6 +68,22 @@ export const MESSAGE_KIND_LABELS = {
   VOLUNTEER: "Volunteer",
 } as const;
 
+export const DONATION_STATUS_LABELS = {
+  PAID: "Paid",
+  PARTIALLY_REFUNDED: "Partially refunded",
+  REFUNDED: "Refunded",
+} as const;
+
+export const DONATION_INTERVAL_LABELS = {
+  ONE_TIME: "One-time",
+  MONTHLY: "Monthly",
+} as const;
+
+export const DONATION_MODE_LABELS = {
+  live: "Live",
+  test: "Test",
+} as const;
+
 /** { KEY: "Label" } -> select options in declaration order. */
 export function optionsOf(
   labels: Readonly<Record<string, string>>,

@@ -28,7 +28,7 @@
     },
     "support": {
       "title": "Support the Mission",
-      "description": "Ways to support the work of {name}. This page is coming in a later phase."
+      "description": "Ways to support the work of {name}, including online giving in US dollars."
     },
     "contact": {
       "title": "Contact",
@@ -45,6 +45,14 @@
     "notFound": {
       "title": "Page not found",
       "description": "The page you are looking for could not be found."
+    },
+    "supportThanks": {
+      "title": "Thank you",
+      "description": "Thank you for supporting {name}."
+    },
+    "supportCancelled": {
+      "title": "Payment cancelled",
+      "description": "No payment was made to {name}."
     }
   },
   "Nav": {
@@ -135,11 +143,6 @@
     "VIDEO": "Video",
     "AUDIO": "Audio",
     "IMAGE": "Image"
-  },
-  "Placeholder": {
-    "body": "This page is coming in a later phase.",
-    "emailNote": "Until then, you can reach us at:",
-    "backHome": "Back to home"
   },
   "NotFound": {
     "title": "Page not found",
@@ -376,10 +379,72 @@
     "turnstileLoadFailed": "The spam check could not load. Check your connection and reload the page.",
     "rateLimited": "You have sent several messages in a short time. Please try again later.",
     "generic": "Something went wrong and your message was not sent. Please try again.",
-    "fixFields": "Please fix the highlighted fields."
+    "fixFields": "Please fix the highlighted fields.",
+    "amountRequired": "Please choose an amount.",
+    "amountInvalid": "Enter an amount in US dollars, for example 40 or 40.50.",
+    "amountTooSmall": "The smallest gift online is {min}.",
+    "amountTooLarge": "The largest gift online is {max}. Please contact us about a larger gift.",
+    "notAvailable": "Online giving is not available right now. Please try again later.",
+    "donationRateLimited": "You have started several payments in a short time. Please try again later.",
+    "donationGeneric": "Something went wrong and the payment page could not be opened. Please try again."
   },
   "Turnstile": {
     "label": "Spam check",
     "loading": "Checking that you're not a robot…"
+  },
+  "SupportPage": {
+    "eyebrow": "Give",
+    "title": "Support the Mission",
+    "intro": "Your prayers and gifts help this ministry share the hope of the Gospel. Thank you for thinking of us.",
+    "missionTitle": "Our mission",
+    "howGiftsUsed": "How gifts are used",
+    "demoGivingInfo": "Sample text: the ministry will describe here how gifts are used.",
+    "englishOnly": "This section is shown in English until a Nepali version is added.",
+    "givingSection": "Online giving",
+    "notConfiguredTitle": "Online giving is not set up yet",
+    "notConfiguredBody": "Thank you for wanting to give. Online giving will open on this page later. Until then, please get in touch and we will gladly tell you about other ways to help.",
+    "closedTitle": "Online giving is not open right now",
+    "closedBody": "Online giving is paused for now. Please get in touch if you would like to give or to help in another way.",
+    "emailUs": "Email us: <link>{email}</link>",
+    "otherWaysTitle": "Other ways to take part",
+    "prayLink": "Send a prayer request",
+    "contactLink": "Contact us",
+    "aboutGivingTitle": "About giving",
+    "processorNote": "Payments are processed securely by Stripe.",
+    "usdNote": "All gifts are in US dollars (USD).",
+    "noCardNote": "We never see or store your card details.",
+    "refundNote": "Questions about a gift, or need a refund? Email <link>{email}</link>.",
+    "manageMonthlyLink": "Manage or cancel a monthly gift on Stripe",
+    "manageMonthlyEmail": "To change or cancel a monthly gift, email <link>{email}</link>.",
+    "privacyLink": "Read how we handle donation data in our <link>Privacy Policy</link>."
+  },
+  "DonationForm": {
+    "formLabel": "Give online",
+    "frequencyLegend": "How often",
+    "oneTime": "One-time",
+    "monthly": "Monthly",
+    "monthlyHint": "Charged once a month until you cancel.",
+    "amountLegend": "Amount (US dollars)",
+    "otherAmount": "Other amount",
+    "otherAmountLabel": "Other amount in US dollars",
+    "amountHint": "From {min} to {max}.",
+    "submitOneTime": "Continue to secure payment",
+    "submitMonthly": "Continue to set up monthly gift",
+    "opening": "Opening Stripe…",
+    "finishOnStripe": "You will finish on Stripe's secure payment page."
+  },
+  "SupportThanks": {
+    "eyebrow": "Thank you",
+    "title": "Thank you for your gift",
+    "body": "Your support means a great deal. Stripe will email your receipt.",
+    "backHome": "Back to home",
+    "prayLink": "Send a prayer request"
+  },
+  "SupportCancelled": {
+    "eyebrow": "Support the Mission",
+    "title": "No payment was made",
+    "body": "You left the payment page before finishing, so nothing was charged. You can try again whenever you like.",
+    "back": "Back to the Support page",
+    "contactLink": "Contact us"
   }
 }

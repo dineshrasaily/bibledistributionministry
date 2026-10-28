@@ -29,17 +29,33 @@ const handlers = (source: string) => {
 describe("admin route handler guard coverage", () => {
   const files = routes(ADMIN_API);
 
-  it("finds the upload, token and library routes", () => {
+  it("finds the upload, token, library and donation export routes", () => {
     const rel = files.map((f) =>
       path.relative(ADMIN_API, f).replaceAll("\\", "/"),
     );
     expect(rel.sort()).toEqual(
       [
+        "donations/export/route.ts",
         "media/library/route.ts",
         "uploads/blob/route.ts",
         "uploads/local/route.ts",
       ].sort(),
     );
+  });
+
+  it("every donation route is OWNER only", () => {
+    const donationFiles = files.filter((f) =>
+      path
+        .relative(ADMIN_API, f)
+        .replaceAll("\\", "/")
+        .startsWith("donations/"),
+    );
+    expect(donationFiles.length).toBeGreaterThan(0);
+    for (const file of donationFiles) {
+      for (const { name, body } of handlers(readFileSync(file, "utf8"))) {
+        expect(body, name).toMatch(/role: "OWNER"/);
+      }
+    }
   });
 
   it.each(files.map((f) => [path.relative(ADMIN_API, f), f]))(

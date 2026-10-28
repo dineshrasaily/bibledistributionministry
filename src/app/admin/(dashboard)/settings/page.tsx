@@ -220,7 +220,23 @@ async function SettingsForm() {
           name="donationsEnabled"
           label="Donations are enabled"
           defaultChecked={s.donationsEnabled}
-          hint="Online giving (in USD) arrives in a later update."
+          hint="Shows the giving form on the Support page. Online giving also needs the Stripe keys (see Donations)."
+        />
+        <MarkdownEditor
+          name="givingInfoEn"
+          label="How gifts are used (English)"
+          lang="en"
+          rows={5}
+          defaultValue={s.givingInfoEn}
+          hint="Shown on the Support page. Leave empty to show the sample text."
+        />
+        <MarkdownEditor
+          name="givingInfoNe"
+          label="How gifts are used (नेपाली, Nepali)"
+          lang="ne"
+          rows={5}
+          defaultValue={s.givingInfoNe}
+          hint="Leave empty to show the English text."
         />
         <CheckboxField
           name="taxDeductibleVerified"
@@ -234,8 +250,9 @@ async function SettingsForm() {
           <p>
             <span className="font-semibold">Important: </span>
             Only check this after a qualified professional has confirmed the
-            ministry&apos;s legal eligibility. The public site makes no tax
-            claims either way.
+            ministry&apos;s legal eligibility. Until it is checked, the Support
+            page and the Terms say gifts are not deductible for tax. After it is
+            checked they only say gifts may be, and to ask a tax advisor.
           </p>
         </div>
       </EditorSection>

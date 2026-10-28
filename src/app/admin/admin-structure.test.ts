@@ -52,7 +52,7 @@ describe("admin route structure", () => {
     },
   );
 
-  it.each(["settings", "users", "audit", "inbox/settings"])(
+  it.each(["settings", "users", "audit", "inbox/settings", "donations"])(
     "(dashboard)/%s/page.tsx is owner-only",
     (section) => {
       const source = read(path.join(DASHBOARD, section, "page.tsx"));

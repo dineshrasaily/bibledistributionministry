@@ -61,6 +61,8 @@ export const settingsSchema = z
     contactEmail: emailSchema,
     donationsEnabled: checkbox(),
     taxDeductibleVerified: checkbox(),
+    givingInfoEn: optionalMarkdown(5000),
+    givingInfoNe: optionalMarkdown(5000),
     isDemo: checkbox(),
     ...socialShape,
   })

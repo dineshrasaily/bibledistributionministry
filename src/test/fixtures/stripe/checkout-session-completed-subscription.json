@@ -1,0 +1,41 @@
+{
+  "id": "evt_test_checkout_sub",
+  "object": "event",
+  "api_version": "2026-09-30.endive",
+  "created": 1793000100,
+  "livemode": false,
+  "pending_webhooks": 1,
+  "request": {
+    "id": null,
+    "idempotency_key": null
+  },
+  "type": "checkout.session.completed",
+  "data": {
+    "object": {
+      "id": "cs_test_sub_1",
+      "object": "checkout.session",
+      "amount_subtotal": 1234,
+      "amount_total": 1234,
+      "currency": "usd",
+      "customer": "cus_test_donor1",
+      "customer_details": {
+        "email": "monthly@example.org",
+        "name": null
+      },
+      "customer_email": null,
+      "invoice": null,
+      "livemode": false,
+      "metadata": {
+        "app": "mission-site",
+        "interval": "MONTHLY",
+        "locale": "en"
+      },
+      "mode": "subscription",
+      "payment_intent": null,
+      "payment_status": "paid",
+      "status": "complete",
+      "subscription": "sub_test_monthly_1",
+      "url": null
+    }
+  }
+}

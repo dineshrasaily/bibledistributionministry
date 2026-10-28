@@ -26,6 +26,8 @@ const PUBLIC_SPECS = [
   "missions.spec.ts",
   "media-center.spec.ts",
   "phase3-screenshots.spec.ts",
+  // Phase 8 (no Stripe keys on this server: "not set up yet")
+  "support.spec.ts",
 ];
 
 export default defineConfig({
@@ -60,6 +62,8 @@ export default defineConfig({
         "admin-a11y.spec.ts",
         // Phase 7 (read-only: anonymous / cross-origin rejections)
         "upload-access.spec.ts",
+        // Phase 8 (read-only: anonymous / editor rejections, empty owner view)
+        "donation-access.spec.ts",
       ],
       dependencies: ["setup"],
       use: { ...devices["Desktop Chrome"] },
@@ -81,6 +85,9 @@ export default defineConfig({
         "admin-inbox.spec.ts",
         "phase6-screenshots.spec.ts",
         "phase7-screenshots.spec.ts",
+        // Phase 8: mock Stripe API + a second server with test keys (:3211)
+        "donations-checkout.spec.ts",
+        "phase8-screenshots.spec.ts",
       ],
       dependencies: ["public", "admin-readonly"],
       fullyParallel: false,
@@ -111,6 +118,14 @@ export default defineConfig({
       BLOB_READ_WRITE_TOKEN: "",
       LOCAL_UPLOAD_DIR: ".local/uploads-e2e",
       VERCEL: "",
+      // Phase 8: the main server has NO Stripe keys ("not set up yet" state).
+      // e2e/helpers/stripe-server.ts starts a second server with test keys
+      // pointed at a local mock Stripe API.
+      STRIPE_SECRET_KEY: "",
+      STRIPE_WEBHOOK_SECRET: "",
+      STRIPE_CUSTOMER_PORTAL_URL: "",
+      STRIPE_API_BASE_URL_FOR_TESTS: "",
+      DONATION_RATE_LIMIT_PER_HOUR: "100",
     },
   },
 });

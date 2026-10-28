@@ -111,13 +111,16 @@ export type PageKey =
   | "support"
   | "contact"
   | "privacy"
-  | "terms";
+  | "terms"
+  | "supportThanks"
+  | "supportCancelled";
 
 /** `generateMetadata` body shared by every locale page. */
 export async function localizedPageMetadata(
   params: Promise<{ locale: string }>,
   key: PageKey,
   path: string,
+  { noindex = false }: { noindex?: boolean } = {},
 ): Promise<Metadata> {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
@@ -132,5 +135,7 @@ export async function localizedPageMetadata(
   });
   // Home uses the bare site name, without the "%s | name" template.
   if (key === "home") metadata.title = { absolute: name };
+  // Result pages (thank-you / cancelled): never indexed, not in the sitemap.
+  if (noindex) metadata.robots = { index: false, follow: false };
   return metadata;
 }

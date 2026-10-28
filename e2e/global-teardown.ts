@@ -7,7 +7,7 @@
  * `local-db.ts stop` CLI under tsx instead.
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
@@ -20,6 +20,28 @@ export default async function globalTeardown(): Promise<void> {
   const vitest = path.join(LOCAL_DIR, "vitest-running");
 
   rmSync(running, { force: true });
+
+  // Phase 8: a leftover second app server (e2e/helpers/stripe-server.ts).
+  const stripePid = path.join(LOCAL_DIR, "e2e-stripe-server.pid");
+  if (existsSync(stripePid)) {
+    const pid = Number(readFileSync(stripePid, "utf8").trim());
+    if (Number.isInteger(pid) && pid > 0) {
+      if (process.platform === "win32") {
+        spawnSync("taskkill", ["/pid", String(pid), "/t", "/f"], {
+          stdio: "ignore",
+          windowsHide: true,
+        });
+      } else {
+        try {
+          process.kill(pid, "SIGTERM");
+        } catch {
+          // already gone
+        }
+      }
+    }
+    rmSync(stripePid, { force: true });
+  }
+
   if (existsSync(started) && !existsSync(vitest)) {
     const tsxCli = createRequire(__filename).resolve("tsx/cli");
     const result = spawnSync(
