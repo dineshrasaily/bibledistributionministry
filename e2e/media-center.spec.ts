@@ -49,25 +49,27 @@ test("no YouTube request or iframe until the visitor presses play", async ({
   ).toBe(true);
 });
 
-test("media center shows each section, audio controls and placeholders", async ({
+test("media center shows sermons, videos and galleries only (no worship or audio)", async ({
   page,
 }) => {
   await page.goto("/en/media");
-  for (const key of [
-    "sermons",
-    "worship",
-    "audio",
-    "videos",
-    "galleries",
-  ] as const) {
+  for (const key of ["sermons", "videos", "galleries"] as const) {
     await expect(
       page.getByRole("heading", { level: 2, name: en.MediaCenter[key] }),
     ).toBeVisible();
   }
-  const audio = page.getByTestId("media-audio").locator("audio[controls]");
-  await expect(audio).toHaveCount(1);
-  await expect(audio).toHaveAttribute("preload", "none");
-  await expect(audio).toHaveAttribute("src", "/demo/audio/sample-silence.wav");
+  for (const name of ["Worship", "Podcasts and audio"]) {
+    await expect(
+      page.getByRole("heading", { level: 2, name, exact: true }),
+    ).toHaveCount(0);
+  }
+  await expect(page.getByTestId("media-worship")).toHaveCount(0);
+  await expect(page.getByTestId("media-audio")).toHaveCount(0);
+  await expect(page.locator("audio")).toHaveCount(0);
+  // The demo worship video now appears under Videos.
+  await expect(
+    page.getByTestId("media-videos").locator("#media-media-4"),
+  ).toHaveCount(1);
   await expect(
     page
       .getByTestId("media-sermons")

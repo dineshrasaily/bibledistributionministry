@@ -95,7 +95,8 @@ export async function getFeaturedContent(
       take: limit,
     }),
     prisma.mediaItem.findMany({
-      where: { status: "PUBLISHED", isFeatured: true },
+      // Audio has no public Media Center section, so it is never featured.
+      where: { status: "PUBLISHED", isFeatured: true, type: { not: "AUDIO" } },
       orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
       take: limit,
     }),
@@ -320,10 +321,13 @@ export const getPublishedEventBySlug = cache(
 
 const MEDIA_SECTION_LIMIT = 12;
 
+/**
+ * Media Center sections. The owner removed the Worship and Podcasts/audio
+ * sections: worship (and any other non-sermon) videos appear under Videos,
+ * and audio files are not listed publicly.
+ */
 export type MediaCenter = {
   sermons: MediaView[];
-  worship: MediaView[];
-  audio: MediaView[];
   videos: MediaView[];
   galleries: PhotoGroup[];
 };
@@ -331,17 +335,14 @@ export type MediaCenter = {
 type MediaSection = Exclude<keyof MediaCenter, "galleries">;
 
 function mediaSection(item: MediaView): MediaSection {
-  if (item.category === "SERMON") return "sermons";
-  if (item.category === "WORSHIP") return "worship";
-  if (item.type === "AUDIO" || item.category === "PODCAST") return "audio";
-  return "videos";
+  return item.category === "SERMON" ? "sermons" : "videos";
 }
 
 /** Published media grouped for the Media Center (newest first per section). */
 export async function getMediaCenter(locale: AppLocale): Promise<MediaCenter> {
   const [rows, galleries, otherPhotos] = await Promise.all([
     prisma.mediaItem.findMany({
-      where: { status: "PUBLISHED", type: { not: "IMAGE" } },
+      where: { status: "PUBLISHED", type: { notIn: ["IMAGE", "AUDIO"] } },
       orderBy: [{ publishedAt: "desc" }, { id: "asc" }],
       take: 200,
     }),
@@ -372,8 +373,6 @@ export async function getMediaCenter(locale: AppLocale): Promise<MediaCenter> {
 
   const center: MediaCenter = {
     sermons: [],
-    worship: [],
-    audio: [],
     videos: [],
     galleries: [],
   };

@@ -435,10 +435,16 @@ describe("getMediaCenter", () => {
       "media-1",
       "media-3",
     ]);
-    expect(center.worship.map((m) => m.id)).toEqual(["media-4"]);
-    expect(center.audio.map((m) => m.id)).toEqual(["media-5"]);
-    expect(center.audio[0]!.audioUrl).toBe("/demo/audio/sample-silence.wav");
-    expect(center.videos.map((m) => m.id)).toEqual(["media-2"]);
+    // Worship videos join Videos; audio (media-5) is not listed publicly.
+    expect(center.videos.map((m) => m.id).sort()).toEqual([
+      "media-2",
+      "media-4",
+    ]);
+    expect(Object.keys(center).sort()).toEqual([
+      "galleries",
+      "sermons",
+      "videos",
+    ]);
     expect(center.galleries.map((g) => g.id)).toEqual([
       "gallery-event-4",
       "other",

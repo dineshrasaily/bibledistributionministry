@@ -20,7 +20,7 @@
     },
     "media": {
       "title": "Media",
-      "description": "Sermons, worship, podcasts, videos and photo galleries from {name}."
+      "description": "Sermons, videos and photo galleries from {name}."
     },
     "prayer": {
       "title": "Prayer",
@@ -264,10 +264,8 @@
   "MediaCenter": {
     "eyebrow": "Media center",
     "title": "Watch, listen and see",
-    "description": "Sermons, worship, podcasts, videos and photos from the ministry.",
+    "description": "Sermons, videos and photos from the ministry.",
     "sermons": "Sermons",
-    "worship": "Worship",
-    "audio": "Podcasts and audio",
     "videos": "Videos",
     "galleries": "Photo galleries",
     "otherPhotos": "Other photos",

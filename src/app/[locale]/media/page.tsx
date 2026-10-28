@@ -166,8 +166,6 @@ export default async function MediaPage({ params }: PageProps) {
 
   const lists = [
     { key: "sermons", items: center.sermons, note: tVideo("privacyNote") },
-    { key: "worship", items: center.worship },
-    { key: "audio", items: center.audio },
     { key: "videos", items: center.videos, note: tVideo("privacyNote") },
   ] as const;
 
