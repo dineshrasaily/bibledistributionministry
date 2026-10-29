@@ -73,6 +73,7 @@ export async function updateSiteSettings(
   return {
     entityId: SINGLETON,
     metadata: {
+      // Field NAMES only, never values (keeps bank account numbers out of the audit log).
       changed: changedFields(existing, data),
       ...(before !== input.taxDeductibleVerified
         ? {

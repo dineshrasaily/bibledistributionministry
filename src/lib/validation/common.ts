@@ -211,6 +211,27 @@ export const emailSchema = z
       .max(254, "Use at most 254 characters"),
   );
 
+/** Optional email: blank becomes null, otherwise the shared email rule. */
+export function optionalEmail() {
+  return z
+    .preprocess(blankToUndefined, emailSchema.optional())
+    .transform((v) => v ?? null);
+}
+
+/**
+ * US ABA routing number: exactly 9 digits and
+ * 3*(d1+d4+d7) + 7*(d2+d5+d8) + (d3+d6+d9) divisible by 10.
+ */
+export function isValidAbaRouting(digits: string): boolean {
+  if (!/^\d{9}$/.test(digits)) return false;
+  const d = [...digits].map(Number);
+  const sum =
+    3 * (d[0]! + d[3]! + d[6]!) +
+    7 * (d[1]! + d[4]! + d[7]!) +
+    (d[2]! + d[5]! + d[8]!);
+  return sum % 10 === 0;
+}
+
 /** Password policy (NIST 800-63B): length only; not-equal-email is refined by callers. */
 export const passwordSchema = z
   .string({ error: REQUIRED_MSG })

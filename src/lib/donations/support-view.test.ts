@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { supportViewModel } from "./support-view";
+import { supportSections, supportViewModel } from "./support-view";
 
 const PORTAL = "https://billing.stripe.com/p/login/test_x";
 
@@ -64,5 +64,23 @@ describe("supportViewModel", () => {
     expect(
       withoutPortal.kind === "open" && withoutPortal.manageMonthly,
     ).toEqual({ kind: "email" });
+  });
+});
+
+describe("supportSections", () => {
+  it("open: Stripe first, then Zelle/bank when set", () => {
+    expect(supportSections("open", false)).toEqual(["stripe"]);
+    expect(supportSections("open", true)).toEqual(["stripe", "offline"]);
+  });
+  it("not open + Zelle/bank: Zelle/bank first, softened card after", () => {
+    expect(supportSections("not-configured", true)).toEqual([
+      "offline",
+      "other-ways",
+    ]);
+    expect(supportSections("closed", true)).toEqual(["offline", "other-ways"]);
+  });
+  it("neither: today's unavailable card only", () => {
+    expect(supportSections("not-configured", false)).toEqual(["unavailable"]);
+    expect(supportSections("closed", false)).toEqual(["unavailable"]);
   });
 });

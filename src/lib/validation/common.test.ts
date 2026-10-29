@@ -5,7 +5,9 @@ import {
   dateOnly,
   emailSchema,
   idSchema,
+  isValidAbaRouting,
   isoDateTime,
+  optionalEmail,
   optionalSafeUrl,
   optionalText,
   passwordSchema,
@@ -151,5 +153,37 @@ describe("emailSchema and passwordSchema", () => {
     expect(passwordSchema.safeParse("short").success).toBe(false);
     expect(passwordSchema.safeParse("a".repeat(12)).success).toBe(true);
     expect(passwordSchema.safeParse("a".repeat(129)).success).toBe(false);
+  });
+});
+
+describe("isValidAbaRouting", () => {
+  it("accepts real routing numbers (checksum ok)", () => {
+    for (const n of ["011000015", "021000021", "121000358"]) {
+      expect(isValidAbaRouting(n), n).toBe(true);
+    }
+  });
+  it("rejects bad checksums, wrong lengths and non-digits", () => {
+    for (const n of [
+      "011000016",
+      "123456789",
+      "12345678",
+      "0210000210",
+      "02100002a",
+      "",
+    ]) {
+      expect(isValidAbaRouting(n), n).toBe(false);
+    }
+  });
+});
+
+describe("optionalEmail", () => {
+  it("blank -> null, otherwise trimmed + lower-cased", () => {
+    expect(optionalEmail().parse("")).toBeNull();
+    expect(optionalEmail().parse("   ")).toBeNull();
+    expect(optionalEmail().parse(undefined)).toBeNull();
+    expect(optionalEmail().parse(" Give@Example.org ")).toBe(
+      "give@example.org",
+    );
+    expect(optionalEmail().safeParse("not-an-email").success).toBe(false);
   });
 });

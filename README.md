@@ -358,6 +358,29 @@ mode** (no real money).
    Admin → Donations then says "Live mode key set". Test-mode gifts stay
    marked **Test**.
 
+#### Zelle and bank transfer (optional, no keys needed)
+
+You can also let donors give straight from their bank, with or without
+Stripe. Both can run together (online giving is shown first).
+
+1. Admin → **Settings → Zelle and bank transfer**.
+2. Fill in the **Zelle recipient name** exactly as your bank app shows it to
+   people who send you money (donors are asked to check this name), plus
+   your Zelle email and/or phone.
+3. Optional QR code: in your bank app open Zelle, find **My QR code**, save
+   it as a picture and upload it in the **Zelle QR code picture** field.
+4. Optional bank transfer: bank name, account holder, account number,
+   routing number (9 digits, checked for typos) and a SWIFT/BIC code for
+   gifts from outside the US.
+5. **Show the account, routing and SWIFT numbers** is **off** by default
+   and should usually stay off: anyone can see the numbers when it is on,
+   and they can be misused for check or ACH fraud. While it is off donors
+   see "Contact us for bank transfer details" instead.
+6. Tick **Show Zelle and bank transfer on the Support page** and save. The
+   section appears only when at least one Zelle or bank detail is filled in.
+   Zelle and bank gifts don't pass through this website, so they don't show
+   up in Admin → Donations and no receipt is sent automatically.
+
 ### Step 10: Your own domain
 
 1. Vercel → **Project → Settings → Domains → Add**, type your domain.
@@ -560,6 +583,10 @@ email, password and authenticator code.
   show up here automatically. The CSV opens in Excel; a cell that starts
   with `=`, `+`, `-` or `@` gets a leading `'` on purpose so spreadsheets
   never run it as a formula.
+- **Zelle and bank transfer** (owner only, Settings): your Zelle details,
+  QR code and bank details for the Support page. Leave **Show the account,
+  routing and SWIFT numbers** off unless you accept the fraud risk; see
+  "Zelle and bank transfer" under Step 9 of the deployment guide.
 - **Users** (owner only): add up to **3 editors**. To add a fourth, deactivate
   one first. "Reset 2FA" makes an editor set up their authenticator app again
   (use it when they change phones). "Set temporary password" helps an editor

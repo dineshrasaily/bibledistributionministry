@@ -24,6 +24,7 @@ import { updateSiteSettingsAction } from "./settings";
 import { createEditorAction, setUserActiveAction } from "./users";
 import { createVerseAction } from "./verses";
 import { setPrayerStatusAction } from "./inbox";
+import { ROUTING_MSG } from "@/lib/validation/settings";
 
 const auditCount = () => prisma.auditLog.count();
 
@@ -340,6 +341,92 @@ describe("AC24: posts mutations audit and revalidate", () => {
       code: "VALIDATION",
       fieldErrors: { aboutImageAltEn: expect.any(String) },
     });
+    expect(await auditCount()).toBe(0);
+  });
+});
+
+describe("Zelle and bank transfer settings", () => {
+  const offlineForm = (extra: Record<string, string> = {}) =>
+    form({
+      ministryName: "Demo Ministry",
+      contactEmail: "hello@example.org",
+      isDemo: "on",
+      offlineGivingEnabled: "on",
+      zelleRecipientName: "Example Ministry",
+      zelleEmail: "Give@Example.org",
+      zellePhone: "(555) 010-0199",
+      bankName: "Example Bank",
+      bankAccountName: "Example Ministry",
+      bankAccountNumber: "0001 2345 6789",
+      bankRoutingNumber: "021-000-021",
+      bankSwiftCode: "chasus33",
+      ...extra,
+    });
+
+  it("OWNER saves normalized values; the audit never holds the account number", async () => {
+    await seedDemoContent(prisma);
+    setTestSession(await makeOwner());
+    const result = await updateSiteSettingsAction(null, offlineForm());
+    expect(result).toMatchObject({ ok: true, message: "Settings saved." });
+    const row = await prisma.siteSettings.findUniqueOrThrow({
+      where: { id: "singleton" },
+    });
+    expect(row).toMatchObject({
+      offlineGivingEnabled: true,
+      zelleEmail: "give@example.org",
+      bankAccountNumber: "000123456789",
+      bankRoutingNumber: "021000021",
+      bankSwiftCode: "CHASUS33",
+      bankShowAccountDetails: false,
+    });
+    const audit = await prisma.auditLog.findMany();
+    expect(audit).toHaveLength(1);
+    const changed = (audit[0]!.metadata as { changed: string[] }).changed;
+    expect(changed).toEqual(
+      expect.arrayContaining([
+        "offlineGivingEnabled",
+        "bankAccountNumber",
+        "bankRoutingNumber",
+      ]),
+    );
+    const json = JSON.stringify(audit[0]);
+    expect(json).not.toContain("000123456789");
+    expect(json).not.toContain("0001");
+    expect(json).not.toContain("021000021");
+    expect(revalidatePath).toHaveBeenCalledWith("/[locale]", "layout");
+  });
+
+  it("an invalid routing number is a field error; nothing saved or audited", async () => {
+    await seedDemoContent(prisma);
+    setTestSession(await makeOwner());
+    const result = await updateSiteSettingsAction(
+      null,
+      offlineForm({ bankRoutingNumber: "123456789" }),
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      code: "VALIDATION",
+      fieldErrors: { bankRoutingNumber: ROUTING_MSG },
+    });
+    const row = await prisma.siteSettings.findUniqueOrThrow({
+      where: { id: "singleton" },
+    });
+    expect(row.offlineGivingEnabled).toBe(false);
+    expect(row.bankRoutingNumber).toBeNull();
+    expect(await auditCount()).toBe(0);
+  });
+
+  it("EDITOR is FORBIDDEN; Zelle/bank stay off and empty", async () => {
+    await seedDemoContent(prisma);
+    setTestSession(await makeEditor());
+    const result = await updateSiteSettingsAction(null, offlineForm());
+    expect(result).toMatchObject({ ok: false, code: "FORBIDDEN" });
+    const row = await prisma.siteSettings.findUniqueOrThrow({
+      where: { id: "singleton" },
+    });
+    expect(row.offlineGivingEnabled).toBe(false);
+    expect(row.zelleEmail).toBeNull();
+    expect(row.bankAccountNumber).toBeNull();
     expect(await auditCount()).toBe(0);
   });
 });

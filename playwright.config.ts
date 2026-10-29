@@ -85,6 +85,8 @@ export default defineConfig({
         "admin-logout.spec.ts",
         "admin-screenshots.spec.ts",
         "admin-settings.spec.ts",
+        // Zelle + bank transfer (restores the settings in finally blocks)
+        "offline-giving.spec.ts",
         // Phase 6 (they write inbox rows; admin-readonly asserts an empty inbox)
         "prayer-form.spec.ts",
         "contact-form.spec.ts",
@@ -100,6 +102,7 @@ export default defineConfig({
         "phase8-screenshots.spec.ts",
         // Phase 9 screenshots (sets the logo, restores it afterwards)
         "phase9-screenshots.spec.ts",
+        "zelle-bank-screenshots.spec.ts",
       ],
       dependencies: ["public", "admin-readonly"],
       fullyParallel: false,

@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { BilingualField } from "@/components/admin/BilingualField";
 import { EditorSection } from "@/components/admin/EditorSection";
-import { CheckboxField, TextField } from "@/components/admin/fields";
+import {
+  CheckboxField,
+  TextAreaField,
+  TextField,
+} from "@/components/admin/fields";
 import { FormShell } from "@/components/admin/FormShell";
 import { formatDateTime } from "@/components/admin/labels";
 import { MarkdownEditor } from "@/components/admin/MarkdownEditor";
@@ -255,6 +259,144 @@ async function SettingsForm() {
             checked they only say gifts may be, and to ask a tax advisor.
           </p>
         </div>
+      </EditorSection>
+
+      <EditorSection title="Zelle and bank transfer">
+        <p className="text-sm text-navy/80">
+          Let donors give straight from their bank. The section shows on the
+          Support page only when it&apos;s turned on and at least one Zelle or
+          bank detail is filled in.
+        </p>
+        <CheckboxField
+          name="offlineGivingEnabled"
+          label="Show Zelle and bank transfer on the Support page"
+          defaultChecked={s.offlineGivingEnabled}
+          hint="Turn this off to hide the whole section. Your details stay saved."
+        />
+
+        <h3 className="font-serif text-lg font-semibold text-navy">Zelle</h3>
+        <TextField
+          name="zelleRecipientName"
+          label="Zelle recipient name"
+          defaultValue={s.zelleRecipientName ?? ""}
+          maxLength={100}
+          hint="Exactly as your bank app shows it to people who send you money. Donors are asked to check this name before sending."
+        />
+        <div className="grid gap-5 md:grid-cols-2">
+          <TextField
+            name="zelleEmail"
+            label="Zelle email (optional)"
+            type="email"
+            defaultValue={s.zelleEmail ?? ""}
+            maxLength={254}
+          />
+          <TextField
+            name="zellePhone"
+            label="Zelle phone (optional)"
+            type="tel"
+            inputMode="tel"
+            defaultValue={s.zellePhone ?? ""}
+            maxLength={20}
+            hint="US number, for example (555) 123-4567."
+          />
+        </div>
+        <MediaPickerField
+          name="zelleQrUrl"
+          label="Zelle QR code picture (optional)"
+          defaultValue={s.zelleQrUrl}
+          hint={`${IMAGE_FIELD_HINT} In your bank app, open Zelle, find "My QR code", save it as a picture and upload it here.`}
+          mode={mode}
+          altFields={{ en: "zelleQrAltEn", ne: "zelleQrAltNe" }}
+        />
+        <BilingualField
+          name="zelleQrAlt"
+          label="QR code description"
+          maxLength={300}
+          defaultEn={s.zelleQrAltEn}
+          defaultNe={s.zelleQrAltNe}
+          hint='Leave empty to use "Zelle QR code for <recipient name>".'
+        />
+
+        <h3 className="font-serif text-lg font-semibold text-navy">
+          Bank transfer
+        </h3>
+        <div className="grid gap-5 md:grid-cols-2">
+          <TextField
+            name="bankName"
+            label="Bank name"
+            defaultValue={s.bankName ?? ""}
+            maxLength={100}
+          />
+          <TextField
+            name="bankAccountName"
+            label="Account holder name"
+            defaultValue={s.bankAccountName ?? ""}
+            maxLength={100}
+          />
+        </div>
+        <div className="grid gap-5 md:grid-cols-2">
+          <TextField
+            name="bankAccountNumber"
+            label="Account number"
+            inputMode="numeric"
+            autoComplete="off"
+            defaultValue={s.bankAccountNumber ?? ""}
+            maxLength={40}
+          />
+          <TextField
+            name="bankRoutingNumber"
+            label="Routing number (ABA, 9 digits)"
+            inputMode="numeric"
+            autoComplete="off"
+            defaultValue={s.bankRoutingNumber ?? ""}
+            maxLength={40}
+          />
+        </div>
+        <TextField
+          name="bankSwiftCode"
+          label="SWIFT/BIC code (optional, for gifts from outside the US)"
+          autoComplete="off"
+          defaultValue={s.bankSwiftCode ?? ""}
+          maxLength={20}
+        />
+        <TextAreaField
+          name="bankAddress"
+          label="Bank address (optional)"
+          rows={3}
+          maxLength={300}
+          defaultValue={s.bankAddress ?? ""}
+          hint="Usually only needed for international transfers."
+        />
+        <div
+          role="note"
+          id="bank-details-warning"
+          className="rounded-lg border-2 border-gold-dark bg-beige/60 px-4 py-3 text-sm text-navy"
+        >
+          <p>
+            <span className="font-semibold">Warning: </span>
+            Anyone can see your full account and routing numbers when this is
+            on, and they can be misused for check or ACH fraud. Leave it off and
+            donors will see &apos;Contact us for bank transfer details&apos;
+            instead, or use Zelle.
+          </p>
+        </div>
+        <CheckboxField
+          name="bankShowAccountDetails"
+          label="Show the account, routing and SWIFT numbers on the Support page"
+          defaultChecked={s.bankShowAccountDetails}
+          hint="Off is safer. Read the warning above before turning this on."
+          aria-describedby="bank-details-warning f-bankShowAccountDetails-hint"
+        />
+        <BilingualField
+          name="offlineGivingNote"
+          label="Note for donors"
+          multiline
+          rows={3}
+          maxLength={500}
+          defaultEn={s.offlineGivingNoteEn}
+          defaultNe={s.offlineGivingNoteNe}
+          hint="Optional. For example: Please write 'Bibles' in the memo."
+        />
       </EditorSection>
 
       <div className="sticky bottom-0 z-10 -mx-4 border-t border-beige bg-ivory/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-lg sm:border">

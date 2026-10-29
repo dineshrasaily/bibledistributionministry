@@ -13,6 +13,22 @@ export type SupportView =
   | { kind: "open"; taxNote: string; manageMonthly: ManageMonthly }
   | { kind: "not-configured" | "closed"; taxNote: null };
 
+export type SupportSection =
+  "stripe" | "offline" | "other-ways" | "unavailable";
+
+/**
+ * Order of the giving blocks on the Support page. Stripe (when open) comes
+ * first; when it isn't open, Zelle/bank leads and the "not set up" card is
+ * replaced by a softer "other ways" card. Neither: today's card, unchanged.
+ */
+export function supportSections(
+  kind: SupportView["kind"],
+  hasOffline: boolean,
+): SupportSection[] {
+  if (kind === "open") return hasOffline ? ["stripe", "offline"] : ["stripe"];
+  return hasOffline ? ["offline", "other-ways"] : ["unavailable"];
+}
+
 export function manageMonthlyOf(portalUrl: string | null): ManageMonthly {
   return portalUrl ? { kind: "portal", url: portalUrl } : { kind: "email" };
 }

@@ -115,37 +115,53 @@ enum PublicShareKind {
 
 // ---------- settings ----------
 model SiteSettings {
-  id                    String   @id @default("singleton")
-  ministryName          String
-  taglineEn             String?
-  taglineNe             String?
-  missionStatementEn    String?
-  missionStatementNe    String?
-  visionEn              String? // Markdown
-  visionNe              String?
-  valuesEn              String? // Markdown
-  valuesNe              String?
-  statementOfFaithEn    String? // Markdown
-  statementOfFaithNe    String?
-  aboutIntroEn          String? // plain text, paragraphs separated by blank lines
-  aboutIntroNe          String?
-  testimonyEn           String? // Markdown, faith journey (About page)
-  testimonyNe           String?
-  goalsEn               String? // Markdown, goals and outreach (About page)
-  goalsNe               String?
-  aboutImageUrl         String? // https URL or site path; filled by the media picker (uploads live in MediaItem)
-  aboutImageAltEn       String? // plain text; required when aboutImageUrl is set (Zod)
-  aboutImageAltNe       String?
-  logoUrl               String? // https URL or site path; filled by the media picker (uploads live in MediaItem)
-  contactEmail          String
-  socialLinks           Json     @default("[]") // SocialLink[] validated by Zod
-  donationsEnabled      Boolean  @default(false)
-  taxDeductibleVerified Boolean  @default(false) // OWNER only; drives src/lib/donation-wording.ts
-  isDemo                Boolean  @default(true) // drives site-wide DemoBanner + hero/intro DemoBadge
-  inboxRetentionMonths  Int      @default(12) // 1..60 (Zod), OWNER only; used by the manual purge
-  givingInfoEn          String? // Markdown, "how gifts are used" (Support page); empty = demo text
-  givingInfoNe          String?
-  updatedAt             DateTime @updatedAt
+  id                     String   @id @default("singleton")
+  ministryName           String
+  taglineEn              String?
+  taglineNe              String?
+  missionStatementEn     String?
+  missionStatementNe     String?
+  visionEn               String? // Markdown
+  visionNe               String?
+  valuesEn               String? // Markdown
+  valuesNe               String?
+  statementOfFaithEn     String? // Markdown
+  statementOfFaithNe     String?
+  aboutIntroEn           String? // plain text, paragraphs separated by blank lines
+  aboutIntroNe           String?
+  testimonyEn            String? // Markdown, faith journey (About page)
+  testimonyNe            String?
+  goalsEn                String? // Markdown, goals and outreach (About page)
+  goalsNe                String?
+  aboutImageUrl          String? // https URL or site path; filled by the media picker (uploads live in MediaItem)
+  aboutImageAltEn        String? // plain text; required when aboutImageUrl is set (Zod)
+  aboutImageAltNe        String?
+  logoUrl                String? // https URL or site path; filled by the media picker (uploads live in MediaItem)
+  contactEmail           String
+  socialLinks            Json     @default("[]") // SocialLink[] validated by Zod
+  donationsEnabled       Boolean  @default(false)
+  taxDeductibleVerified  Boolean  @default(false) // OWNER only; drives src/lib/donation-wording.ts
+  isDemo                 Boolean  @default(true) // drives site-wide DemoBanner + hero/intro DemoBadge
+  inboxRetentionMonths   Int      @default(12) // 1..60 (Zod), OWNER only; used by the manual purge
+  givingInfoEn           String? // Markdown, "how gifts are used" (Support page); empty = demo text
+  givingInfoNe           String?
+  offlineGivingEnabled   Boolean  @default(false) // master switch: Zelle + bank section on the Support page
+  zelleRecipientName     String? // exact name donors see in their bank app; required with email/phone/QR (Zod)
+  zelleEmail             String?
+  zellePhone             String?
+  zelleQrUrl             String? // https URL or site path; filled by the media picker
+  zelleQrAltEn           String? // plain text; defaulted by Zod when a QR is set
+  zelleQrAltNe           String?
+  bankName               String?
+  bankAccountName        String? // account holder
+  bankAccountNumber      String? // digits only; NEVER logged or put in audit metadata
+  bankRoutingNumber      String? // ABA, 9 digits + checksum (Zod)
+  bankSwiftCode          String? // BIC, 8 or 11 chars, upper-case
+  bankAddress            String?
+  bankShowAccountDetails Boolean  @default(false) // off: donors see "Contact us for bank transfer details"
+  offlineGivingNoteEn    String? // plain text, e.g. memo instructions
+  offlineGivingNoteNe    String?
+  updatedAt              DateTime @updatedAt
 }
 
 // ---------- admin auth ----------

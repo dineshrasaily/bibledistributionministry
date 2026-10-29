@@ -1,0 +1,17 @@
+-- AlterTable
+ALTER TABLE "SiteSettings" ADD COLUMN     "bankAccountName" TEXT,
+ADD COLUMN     "bankAccountNumber" TEXT,
+ADD COLUMN     "bankAddress" TEXT,
+ADD COLUMN     "bankName" TEXT,
+ADD COLUMN     "bankRoutingNumber" TEXT,
+ADD COLUMN     "bankShowAccountDetails" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "bankSwiftCode" TEXT,
+ADD COLUMN     "offlineGivingEnabled" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "offlineGivingNoteEn" TEXT,
+ADD COLUMN     "offlineGivingNoteNe" TEXT,
+ADD COLUMN     "zelleEmail" TEXT,
+ADD COLUMN     "zellePhone" TEXT,
+ADD COLUMN     "zelleQrAltEn" TEXT,
+ADD COLUMN     "zelleQrAltNe" TEXT,
+ADD COLUMN     "zelleQrUrl" TEXT,
+ADD COLUMN     "zelleRecipientName" TEXT;

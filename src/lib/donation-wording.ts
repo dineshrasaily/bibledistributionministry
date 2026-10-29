@@ -19,6 +19,31 @@ const NOTES: Record<AppLocale, { verified: string; unverified: string }> = {
   },
 };
 
+/** Zelle/bank gifts: same rule, but no Stripe receipt claim. */
+const OFFLINE_NOTES: Record<
+  AppLocale,
+  { verified: string; unverified: string }
+> = {
+  en: {
+    unverified: NOTES.en.unverified,
+    verified: "Gifts may be tax-deductible; consult your tax advisor.",
+  },
+  ne: {
+    unverified: NOTES.ne.unverified,
+    verified:
+      "दानहरू करमा छुट पाउने (tax-deductible) हुन सक्छन्; आफ्नो कर सल्लाहकारसँग सोध्नुहोस्।",
+  },
+};
+
+/** Tax line for Zelle/bank gifts on the Support page. */
+export function offlineTaxNote(
+  locale: AppLocale,
+  taxDeductibleVerified: boolean,
+): string {
+  const notes = OFFLINE_NOTES[locale];
+  return taxDeductibleVerified ? notes.verified : notes.unverified;
+}
+
 export function donationTaxNote(
   locale: AppLocale,
   taxDeductibleVerified: boolean,

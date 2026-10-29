@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { donationDisclosure, donationTaxNote } from "./donation-wording";
+import {
+  donationDisclosure,
+  donationTaxNote,
+  offlineTaxNote,
+} from "./donation-wording";
 
 describe("donationTaxNote", () => {
   it("says gifts are not tax-deductible until verified", () => {
@@ -44,6 +48,21 @@ describe("donationDisclosure", () => {
           taxNote: donationTaxNote(locale, verified),
         });
       }
+    }
+  });
+});
+
+describe("offlineTaxNote", () => {
+  it("unverified: identical to the Stripe tax note", () => {
+    expect(offlineTaxNote("en", false)).toBe(donationTaxNote("en", false));
+    expect(offlineTaxNote("ne", false)).toBe(donationTaxNote("ne", false));
+  });
+  it("verified: only 'may be', and no Stripe receipt claim", () => {
+    expect(offlineTaxNote("en", true)).toMatch(/may be/);
+    expect(offlineTaxNote("en", true)).toMatch(/consult/);
+    for (const locale of ["en", "ne"] as const) {
+      expect(offlineTaxNote(locale, true)).not.toMatch(/Stripe/);
+      expect(offlineTaxNote(locale, true)).not.toMatch(/receipt/i);
     }
   });
 });
