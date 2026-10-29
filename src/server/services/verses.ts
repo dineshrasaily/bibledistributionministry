@@ -1,7 +1,8 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
-import type { ContentStatus } from "@/generated/prisma/enums";
+import type { BibleTranslation, ContentStatus } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/db";
+import { getVerseOfTheDay, siteDay } from "@/lib/verse-of-the-day";
 import { PAGE_SIZE } from "@/lib/validation/list-query";
 import type {
   FeatureVerseInput,
@@ -10,6 +11,7 @@ import type {
   VerseStatusInput,
 } from "@/lib/validation/verses";
 import { DomainError } from "@/server/errors";
+import { getSettingsForEdit } from "./settings";
 import {
   changedFields,
   ilike,
@@ -51,16 +53,59 @@ export function getVerse(id: string) {
   return prisma.bibleVerse.findUnique({ where: { id } });
 }
 
-/** UTC midnight of `now` (the verse-of-the-day boundary is UTC). */
+/** UTC midnight of `now` (kept for callers that want the UTC date). */
 export function utcDay(now: Date = new Date()): Date {
   return new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
   );
 }
 
-/** The verse featured exactly on today's UTC date, if any. */
-export function getVerseFeaturedOn(day: Date = utcDay()) {
-  return prisma.bibleVerse.findUnique({ where: { featuredOn: day } });
+/** Today in the Settings time zone (the verse-of-the-day boundary). */
+export async function siteToday(now: Date = new Date()) {
+  const settings = await getSettingsForEdit();
+  return {
+    ...siteDay(now, settings.siteTimezone),
+    timeZone: settings.siteTimezone,
+  };
+}
+
+/** The verse featured exactly on `day` (default: today in the site time zone). */
+export async function getVerseFeaturedOn(day?: Date) {
+  const key = day ?? (await siteToday()).utcDate;
+  return prisma.bibleVerse.findUnique({ where: { featuredOn: key } });
+}
+
+export type TodayVersePreview = {
+  /** "YYYY-MM-DD" in the site time zone. */
+  today: string;
+  timeZone: string;
+  /** A published verse featured today: visitors see it instead of the automatic one. */
+  override: { reference: string; translation: BibleTranslation } | null;
+  autoEnabled: boolean;
+  auto: { reference: string; translation: BibleTranslation };
+};
+
+/** What visitors see today (read-only preview for Admin -> Bible verses). */
+export async function getTodayVersePreview(
+  now: Date = new Date(),
+): Promise<TodayVersePreview> {
+  const settings = await getSettingsForEdit();
+  const day = siteDay(now, settings.siteTimezone);
+  const featured = await prisma.bibleVerse.findFirst({
+    where: { status: "PUBLISHED", featuredOn: day.utcDate },
+    select: { reference: true, translation: true },
+  });
+  const { verse } = getVerseOfTheDay(now, settings.siteTimezone);
+  return {
+    today: day.iso,
+    timeZone: settings.siteTimezone,
+    override: featured,
+    autoEnabled: settings.autoVerseEnabled,
+    auto: {
+      reference: verse.reference,
+      translation: settings.autoVerseTranslation,
+    },
+  };
 }
 
 function statusFor(intent: VerseInput["intent"]): ContentStatus {

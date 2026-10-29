@@ -14,6 +14,7 @@ import {
 } from "@/test/factories";
 import { seedDemoContent } from "../../prisma/seed-lib";
 import {
+  getDailyVerse,
   getFeaturedContent,
   getFeaturedVerse,
   getMediaCenter,
@@ -29,6 +30,7 @@ import {
   listPublishedPosts,
 } from "./content";
 import { prisma } from "./db";
+import { getVerseOfTheDay } from "./verse-of-the-day";
 
 const isSortedDesc = (dates: string[]) =>
   dates.every((d, i) => i === 0 || Date.parse(dates[i - 1]!) >= Date.parse(d));
@@ -215,6 +217,99 @@ describe("featured verse precedence", () => {
     await prisma.bibleVerse.deleteMany();
     await makeVerse({ status: "DRAFT" });
     expect(await getFeaturedVerse(now)).toBeNull();
+  });
+});
+
+describe("getDailyVerse (automatic verse of the day)", () => {
+  // 03:30 UTC on Mar 10 = 23:30 on Mar 9 in New York (EDT).
+  const now = new Date("2026-03-10T03:30:00.000Z");
+  const settings = (data: {
+    autoVerseEnabled?: boolean;
+    autoVerseTranslation?: "WEB" | "KJV";
+    siteTimezone?: string;
+  }) => prisma.siteSettings.update({ where: { id: "singleton" }, data });
+
+  it("defaults: the curated WEB verse for today in New York, not demo", async () => {
+    const result = await getDailyVerse(now);
+    const expected = getVerseOfTheDay(now, "America/New_York");
+    expect(expected.day.iso).toBe("2026-03-09");
+    expect(result).toEqual({
+      source: "auto",
+      verse: {
+        id: `auto-${expected.index}`,
+        reference: expected.verse.reference,
+        translation: "WEB",
+        text: expected.verse.web,
+        isDemo: false,
+      },
+    });
+  });
+
+  it("the KJV setting shows the KJV text", async () => {
+    await settings({ autoVerseTranslation: "KJV" });
+    const result = await getDailyVerse(now);
+    const expected = getVerseOfTheDay(now, "America/New_York").verse;
+    expect(result!.verse.translation).toBe("KJV");
+    expect(result!.verse.text).toBe(expected.kjv);
+  });
+
+  it("an override featured on today's site date wins, even when the UTC date differs", async () => {
+    const override = await makeVerse({
+      featuredOn: new Date("2026-03-09T00:00:00.000Z"),
+    });
+    // The UTC date (Mar 10) has its own featured verse: not today in New York.
+    await makeVerse({ featuredOn: new Date("2026-03-10T00:00:00.000Z") });
+    const result = await getDailyVerse(now);
+    expect(result).toMatchObject({
+      source: "override",
+      verse: { id: override.id },
+    });
+    // In Kathmandu it is already Mar 10.
+    await settings({ siteTimezone: "Asia/Kathmandu" });
+    const ktm = await getDailyVerse(now);
+    expect(ktm!.source).toBe("override");
+    expect(ktm!.verse.id).not.toBe(override.id);
+  });
+
+  it("a draft featured today and past featured verses do not beat the automatic verse", async () => {
+    await makeVerse({
+      status: "DRAFT",
+      featuredOn: new Date("2026-03-09T00:00:00.000Z"),
+    });
+    await makeVerse({ featuredOn: new Date("2026-03-08T00:00:00.000Z") });
+    expect((await getDailyVerse(now))!.source).toBe("auto");
+  });
+
+  it("disabled: falls back to the most recent past featured verse", async () => {
+    await settings({ autoVerseEnabled: false });
+    const past = await makeVerse({
+      featuredOn: new Date("2026-03-05T00:00:00.000Z"),
+    });
+    await makeVerse({ featuredOn: new Date("2026-03-20T00:00:00.000Z") });
+    expect(await getDailyVerse(now)).toEqual({
+      source: "fallback",
+      verse: expect.objectContaining({ id: past.id }),
+    });
+  });
+
+  it("disabled with no published verse: null", async () => {
+    await settings({ autoVerseEnabled: false });
+    await prisma.bibleVerse.deleteMany();
+    expect(await getDailyVerse(now)).toBeNull();
+  });
+
+  it("rolls over at midnight in the site time zone", async () => {
+    // New York (EDT): 23:59 on Jun 15 vs 00:01 on Jun 16.
+    const before = await getDailyVerse(new Date("2026-06-16T03:59:00.000Z"));
+    const after = await getDailyVerse(new Date("2026-06-16T04:01:00.000Z"));
+    expect(before!.verse.reference).toBe(
+      getVerseOfTheDay(new Date("2026-06-15T12:00:00Z"), "UTC").verse.reference,
+    );
+    expect(after!.verse.reference).not.toBe(before!.verse.reference);
+    // The same instant is already the 16th in UTC.
+    await settings({ siteTimezone: "UTC" });
+    const utc = await getDailyVerse(new Date("2026-06-16T03:59:00.000Z"));
+    expect(utc!.verse.reference).toBe(after!.verse.reference);
   });
 });
 

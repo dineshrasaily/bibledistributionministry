@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import en from "../messages/en.json";
 import ne from "../messages/ne.json";
+import { getVerseOfTheDay } from "../src/lib/verse-of-the-day";
 
 const locales = [
   { locale: "en", messages: en },
@@ -36,9 +37,11 @@ for (const { locale, messages } of locales) {
     await expect(page.locator("[data-demo-banner]")).toHaveText(
       messages.DemoBanner.text,
     );
+    // The automatic verse of the day (seeded defaults: on, WEB, New York).
+    const { verse } = getVerseOfTheDay(new Date(), "America/New_York");
     await expect(
-      page.getByText("Isaiah 6:8 (WEB)", { exact: true }),
-    ).toBeVisible();
+      page.locator('section[aria-labelledby="verse-heading"] cite'),
+    ).toHaveText(`${verse.reference} (WEB)`);
   });
 
   test(`/${locale} unknown path shows the localized 404`, async ({ page }) => {

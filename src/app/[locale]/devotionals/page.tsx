@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PostType } from "@/generated/prisma/enums";
 import { routing } from "@/i18n/routing";
 import {
-  getFeaturedVerse,
+  getDailyVerse,
   listPublicCategories,
   listPublishedPosts,
 } from "@/lib/content";
@@ -41,12 +41,13 @@ export default async function DevotionalsPage({
   setRequestLocale(locale);
 
   const query = parsePublicPostQuery(await searchParams);
-  const [verse, posts, categories] = await Promise.all([
-    getFeaturedVerse(),
+  const [daily, posts, categories] = await Promise.all([
+    getDailyVerse(),
     listPublishedPosts(query, locale),
     listPublicCategories(locale),
   ]);
 
+  const verse = daily?.verse;
   const t = await getTranslations({ locale, namespace: "Devotionals" });
   const tPost = await getTranslations({ locale, namespace: "PostTypes" });
   const tPage = await getTranslations({ locale, namespace: "Pagination" });

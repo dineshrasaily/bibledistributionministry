@@ -26,6 +26,7 @@
     "admin:create-owner": "tsx scripts/create-owner.ts",
     "e2e:prepare": "tsx scripts/e2e-prepare.ts",
     "brand:generate": "tsx scripts/generate-brand-assets.ts",
+    "verses:build": "tsx scripts/build-daily-verses.ts",
     "vercel-build": "prisma migrate deploy && next build"
   },
   "dependencies": {

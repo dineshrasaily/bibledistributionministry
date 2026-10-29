@@ -52,7 +52,7 @@ export function VerseEditor({ verse }: { verse?: BibleVerse }) {
           label="Verse of the day on (optional)"
           type="date"
           defaultValue={isoDay(verse?.featuredOn)}
-          hint="UTC date. Only published verses can be featured."
+          hint="A date in the ministry time zone (Settings). It replaces the automatic verse for that day. Only published verses can be featured."
         />
       </EditorSection>
       <PublishControls status={verse?.status ?? null} />

@@ -1,14 +1,20 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { BilingualField } from "@/components/admin/BilingualField";
 import { EditorSection } from "@/components/admin/EditorSection";
 import {
   CheckboxField,
+  SelectField,
   TextAreaField,
   TextField,
 } from "@/components/admin/fields";
 import { FormShell } from "@/components/admin/FormShell";
-import { formatDateTime } from "@/components/admin/labels";
+import {
+  formatDateTime,
+  optionsOf,
+  TRANSLATION_LABELS,
+} from "@/components/admin/labels";
 import { MarkdownEditor } from "@/components/admin/MarkdownEditor";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { FormSkeleton } from "@/components/admin/Skeletons";
@@ -17,6 +23,7 @@ import { IMAGE_FIELD_HINT } from "@/components/admin/UploadHint";
 import { MediaPickerField } from "@/components/admin/MediaPickerField";
 import { getStorageMode } from "@/server/storage";
 import { SOCIAL_PLATFORMS, type SocialPlatform } from "@/config/social";
+import { timeZoneOptions } from "@/config/time-zones";
 import { updateSiteSettingsAction } from "@/server/actions/settings";
 import { requireOwnerPage } from "@/server/auth/guards";
 import { getSettingsForEdit, socialUrlsOf } from "@/server/services/settings";
@@ -112,6 +119,47 @@ async function SettingsForm() {
           defaultNe={s.missionStatementNe}
           hint="Shown on the home page and as a large quote on the About page."
         />
+      </EditorSection>
+
+      <EditorSection title="Verse of the day">
+        <CheckboxField
+          name="autoVerseEnabled"
+          label="Show an automatic verse every day"
+          defaultChecked={s.autoVerseEnabled}
+          hint="Each day the home and Devotionals pages show a different well-known verse from a list of 366. When this is off, the most recent verse you featured is shown."
+        />
+        <div className="grid gap-5 md:grid-cols-2">
+          <SelectField
+            name="autoVerseTranslation"
+            label="Translation"
+            defaultValue={s.autoVerseTranslation}
+            options={optionsOf(TRANSLATION_LABELS)}
+            hint="WEB uses the name Yahweh in the Old Testament; KJV uses LORD."
+          />
+          <SelectField
+            name="siteTimezone"
+            label="Ministry time zone"
+            defaultValue={s.siteTimezone}
+            options={timeZoneOptions()}
+            hint="The verse changes at midnight in this time zone."
+          />
+        </div>
+        <div
+          role="note"
+          className="rounded-lg border border-gold-dark bg-beige/40 px-4 py-3 text-sm text-navy"
+        >
+          <p>
+            <span className="font-semibold">Good to know: </span>A verse you
+            pick for a specific date under{" "}
+            <Link
+              href="/admin/verses"
+              className="font-medium text-navy underline decoration-gold-dark underline-offset-2 hover:decoration-2"
+            >
+              Bible Verses
+            </Link>{" "}
+            always replaces the automatic verse for that day.
+          </p>
+        </div>
       </EditorSection>
 
       <EditorSection title="About page">

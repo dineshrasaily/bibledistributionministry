@@ -14,7 +14,7 @@ export async function FeaturedVerse({
 }) {
   const t = await getTranslations({ locale, namespace: "Home" });
   const tCommon = await getTranslations({ locale, namespace: "Common" });
-  // Verse text is English (WEB); Nepali pages show it with a note.
+  // Verse text is English (WEB or KJV); Nepali pages show it with a note.
   const isEnglishPage = locale === "en";
 
   return (
@@ -34,7 +34,11 @@ export async function FeaturedVerse({
           reference={verse.reference}
           translation={verse.translation}
           textLang={isEnglishPage ? undefined : "en"}
-          note={isEnglishPage ? undefined : t("verseNoteNe")}
+          note={
+            isEnglishPage
+              ? undefined
+              : t("verseNoteNe", { translation: verse.translation })
+          }
           badge={
             verse.isDemo ? <DemoBadge label={tCommon("demoBadge")} /> : null
           }

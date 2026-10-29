@@ -101,7 +101,7 @@
     "ctaPrayer": "Prayer Request",
     "ctaSupport": "Support the Mission",
     "verseEyebrow": "Featured verse",
-    "verseNoteNe": "A Nepali translation will be added later; the English WEB text is shown for now.",
+    "verseNoteNe": "A Nepali translation will be added later; the English {translation} text is shown for now.",
     "introEyebrow": "About the ministry",
     "introTitle": "A small ministry with a simple calling",
     "introPanelLabel": "Scripture · Prayer · Service",

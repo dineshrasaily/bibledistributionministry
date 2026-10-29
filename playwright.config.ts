@@ -103,6 +103,9 @@ export default defineConfig({
         // Phase 9 screenshots (sets the logo, restores it afterwards)
         "phase9-screenshots.spec.ts",
         "zelle-bank-screenshots.spec.ts",
+        // Automatic verse of the day (restores the settings in finally blocks)
+        "verse-of-day.spec.ts",
+        "verse-of-day-screenshots.spec.ts",
       ],
       dependencies: ["public", "admin-readonly"],
       fullyParallel: false,

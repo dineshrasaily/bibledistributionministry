@@ -71,4 +71,8 @@ export const defaultSiteSettings = {
   bankShowAccountDetails: false,
   offlineGivingNoteEn: null,
   offlineGivingNoteNe: null,
+  // Automatic verse of the day (a verse featured for a date always wins).
+  autoVerseEnabled: true,
+  autoVerseTranslation: "WEB",
+  siteTimezone: "America/New_York",
 } satisfies Omit<SiteSettings, "id" | "updatedAt">;

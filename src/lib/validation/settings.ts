@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { SOCIAL_PLATFORMS, type SocialPlatform } from "@/config/social";
+import { DEFAULT_SITE_TIME_ZONE, isValidTimeZone } from "@/config/time-zones";
 import {
   checkbox,
   emailSchema,
@@ -28,6 +29,10 @@ export const SWIFT_MSG =
 export const BANK_DETAILS_MISSING_MSG =
   "Add the account or routing number, or turn this off.";
 export const zelleQrDefaultAlt = (name: string) => `Zelle QR code for ${name}`;
+
+// Verse of the day.
+export const TIMEZONE_MSG = "Choose a time zone from the list.";
+export const TRANSLATION_MSG = "Choose WEB or KJV.";
 
 const PHONE_RE = /^[0-9 ()+\-.]{7,20}$/;
 const SWIFT_RE = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
@@ -131,6 +136,18 @@ export const settingsSchema = z
     bankShowAccountDetails: checkbox(),
     offlineGivingNoteEn: optionalText(500),
     offlineGivingNoteNe: optionalText(500),
+    autoVerseEnabled: checkbox(),
+    // Absent (a partial post) keeps the defaults; anything else must match.
+    autoVerseTranslation: z
+      .enum(["WEB", "KJV"], { error: TRANSLATION_MSG })
+      .optional()
+      .default("WEB"),
+    siteTimezone: z
+      .string({ error: TIMEZONE_MSG })
+      .trim()
+      .optional()
+      .default(DEFAULT_SITE_TIME_ZONE)
+      .refine(isValidTimeZone, TIMEZONE_MSG),
     ...socialShape,
   })
   .superRefine((input, ctx) => {

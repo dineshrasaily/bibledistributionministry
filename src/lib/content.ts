@@ -34,11 +34,13 @@ import {
   toPublicShareView,
   type PublicShareView,
 } from "./public-share-mappers";
+import { getSiteSettings } from "./site-settings";
 import { SLUG_RE } from "./validation/common";
 import {
   PUBLIC_POST_PAGE_SIZE,
   type PublicPostQuery,
 } from "./validation/public-query";
+import { getVerseOfTheDay, siteDay, toAutoVerseView } from "./verse-of-the-day";
 
 export type {
   CategoryView,
@@ -139,20 +141,16 @@ export async function getVerseById(id: string): Promise<VerseView | null> {
   return row ? toVerseView(row) : null;
 }
 
-function startOfUtcDay(now: Date): Date {
-  return new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-  );
-}
-
 /**
- * The verse featured on the home page: today's verse (UTC), else the most
- * recent past featured verse, else the newest published verse, else null.
+ * The fallback featured verse: today's verse (calendar date in `timeZone`),
+ * else the most recent past featured verse, else the newest published
+ * verse, else null. Used when the automatic verse of the day is off.
  */
 export async function getFeaturedVerse(
   now: Date = new Date(),
+  timeZone = "UTC",
 ): Promise<VerseView | null> {
-  const today = startOfUtcDay(now);
+  const today = siteDay(now, timeZone).utcDate;
   const featured = await prisma.bibleVerse.findFirst({
     where: { status: "PUBLISHED", featuredOn: { lte: today } },
     orderBy: { featuredOn: "desc" },
@@ -163,6 +161,37 @@ export async function getFeaturedVerse(
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
   });
   return newest ? toVerseView(newest) : null;
+}
+
+export type DailyVerseSource = "override" | "auto" | "fallback";
+
+/**
+ * The verse of the day shown on the home and Devotionals pages ("today" is
+ * the calendar date in the Settings time zone):
+ * 1. a published verse the owner featured on today's date (override);
+ * 2. otherwise, when the automatic verse is on, the curated verse for today
+ *    in the chosen translation (src/lib/verse-of-the-day.ts);
+ * 3. otherwise the previous behaviour (`getFeaturedVerse`).
+ */
+export async function getDailyVerse(
+  now: Date = new Date(),
+): Promise<{ verse: VerseView; source: DailyVerseSource } | null> {
+  const settings = await getSiteSettings();
+  const timeZone = settings.siteTimezone;
+  const today = siteDay(now, timeZone);
+  const override = await prisma.bibleVerse.findFirst({
+    where: { status: "PUBLISHED", featuredOn: today.utcDate },
+  });
+  if (override) return { verse: toVerseView(override), source: "override" };
+  if (settings.autoVerseEnabled) {
+    const { index, verse } = getVerseOfTheDay(now, timeZone);
+    return {
+      verse: toAutoVerseView(verse, index, settings.autoVerseTranslation),
+      source: "auto",
+    };
+  }
+  const fallback = await getFeaturedVerse(now, timeZone);
+  return fallback ? { verse: fallback, source: "fallback" } : null;
 }
 
 // ---------- Devotionals ----------

@@ -15,7 +15,7 @@ import { UpcomingEvents } from "@/components/home/UpcomingEvents";
 import { routing } from "@/i18n/routing";
 import {
   getFeaturedContent,
-  getFeaturedVerse,
+  getDailyVerse,
   getRecentUpdates,
   getUpcomingEvents,
 } from "@/lib/content";
@@ -24,7 +24,9 @@ import { localizedPageMetadata } from "@/lib/metadata";
 
 type PageProps = { params: Promise<{ locale: string }> };
 
-// Lets the UTC "verse of the day" roll over without an admin edit.
+// ISR: the verse of the day (calendar day in the Settings time zone) rolls
+// over within an hour of midnight without a redeploy or an admin edit; admin
+// saves revalidate right away.
 export const revalidate = 3600;
 
 export function generateMetadata({ params }: PageProps) {
@@ -36,12 +38,13 @@ export default async function HomePage({ params }: PageProps) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const [updates, featured, events, verse] = await Promise.all([
+  const [updates, featured, events, daily] = await Promise.all([
     getRecentUpdates(locale),
     getFeaturedContent(locale),
     getUpcomingEvents(locale),
-    getFeaturedVerse(),
+    getDailyVerse(),
   ]);
+  const verse = daily?.verse;
 
   const t = await getTranslations({ locale, namespace: "Home" });
   const tCommon = await getTranslations({ locale, namespace: "Common" });

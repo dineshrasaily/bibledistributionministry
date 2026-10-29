@@ -8,16 +8,19 @@ import { TextField } from "./fields";
 import { FormShell } from "./FormShell";
 import { SubmitButton } from "./SubmitButton";
 
-/** "Feature on…" row action: picks the UTC date this verse is the verse of the day. */
+/** "Feature on…" row action: picks the date (site time zone) this verse is the verse of the day. */
 export function FeatureVerseDialog({
   id,
   reference,
   defaultDate,
+  timeZone,
 }: {
   id: string;
   reference: string;
-  /** YYYY-MM-DD, today in UTC. */
+  /** YYYY-MM-DD, today in the site time zone. */
   defaultDate: string;
+  /** The Settings time zone, e.g. "America/New_York". */
+  timeZone: string;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -37,8 +40,8 @@ export function FeatureVerseDialog({
             Feature {reference}
           </Dialog.Title>
           <p id={`feature-desc-${id}`} className="text-sm text-navy/80">
-            Choose the day (UTC) this verse shows as the verse of the day on the
-            home page.
+            Choose the day ({timeZone}) this verse shows as the verse of the day
+            on the home page. It replaces the automatic verse for that day.
           </p>
           <FormShell
             action={setFeaturedVerseAction}

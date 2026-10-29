@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { FeatureVerseDialog } from "@/components/admin/FeatureVerseDialog";
@@ -6,7 +7,6 @@ import { InlineAction } from "@/components/admin/InlineAction";
 import {
   CONTENT_STATUS_LABELS,
   formatDate,
-  isoDay,
   optionsOf,
   type SearchParams,
 } from "@/components/admin/labels";
@@ -28,9 +28,9 @@ import {
 } from "@/server/actions/verses";
 import { requireAdminPage } from "@/server/auth/guards";
 import {
-  getVerseFeaturedOn,
+  getTodayVersePreview,
   listVerses,
-  utcDay,
+  siteToday,
 } from "@/server/services/verses";
 
 export const metadata: Metadata = { title: "Bible verses" };
@@ -38,42 +38,88 @@ export const metadata: Metadata = { title: "Bible verses" };
 const FILTERS = { status: ContentStatus };
 type Query = ListQuery<typeof FILTERS>;
 
-async function FeaturedToday() {
-  const verse = await getVerseFeaturedOn();
+const longDate = (iso: string) =>
+  new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${iso}T00:00:00.000Z`));
+
+/** Read-only: what visitors see on the home page today. */
+async function TodayVerse({ isOwner }: { isOwner: boolean }) {
+  const p = await getTodayVersePreview();
+  const settingsLink = isOwner ? (
+    <Link
+      href="/admin/settings"
+      className="font-medium text-navy underline decoration-gold-dark underline-offset-2 hover:decoration-2"
+    >
+      Settings
+    </Link>
+  ) : (
+    "Settings (owner only)"
+  );
   return (
     <section
       aria-labelledby="today-heading"
+      data-testid="today-verse-preview"
       className="mb-6 rounded-lg border border-gold/60 bg-white p-5"
     >
       <h2
         id="today-heading"
         className="text-xs font-semibold tracking-[0.14em] text-gold-dark uppercase"
       >
-        Verse of the day (today, UTC)
+        Today&apos;s verse
       </h2>
-      {verse ? (
-        <div className="mt-2 flex flex-col gap-1">
-          <p className="font-serif text-lg text-navy italic">
-            &ldquo;{verse.text}&rdquo;
-          </p>
-          <p className="text-sm font-medium text-navy">
-            {verse.reference} ({verse.translation})
-          </p>
+      <p className="mt-1 text-sm text-navy/80">
+        {longDate(p.today)} ({p.timeZone})
+      </p>
+      <dl className="mt-3 grid gap-3 text-sm text-navy sm:grid-cols-2">
+        <div className="flex flex-col gap-1">
+          <dt className="font-semibold">Picked for today</dt>
+          <dd data-testid="today-override">
+            {p.override ? (
+              <>
+                <Badge variant="gold">Override active today</Badge>{" "}
+                <span className="font-medium">
+                  {p.override.reference} ({p.override.translation})
+                </span>{" "}
+                is shown to visitors.
+              </>
+            ) : (
+              <>No override today. Use &ldquo;Feature on…&rdquo; below.</>
+            )}
+          </dd>
         </div>
-      ) : (
-        <p className="mt-2 text-navy/80">
-          No verse is set for today. The home page shows the most recent
-          featured verse instead. Use &ldquo;Feature on…&rdquo; below to pick
-          one.
-        </p>
-      )}
+        <div className="flex flex-col gap-1">
+          <dt className="font-semibold">Today&apos;s automatic verse</dt>
+          <dd data-testid="today-auto">
+            {p.autoEnabled ? (
+              <>
+                <span className="font-medium">
+                  {p.auto.reference} ({p.auto.translation})
+                </span>
+                {p.override ? " (replaced by the override today)" : null}
+              </>
+            ) : (
+              <>
+                The automatic verse is off. Turn it on in {settingsLink}.
+                {p.override
+                  ? null
+                  : " Visitors see the most recent featured verse."}
+              </>
+            )}
+          </dd>
+        </div>
+      </dl>
     </section>
   );
 }
 
 async function VerseList({ query }: { query: Query }) {
-  const page = await listVerses(query);
-  const today = isoDay(utcDay());
+  const [page, day] = await Promise.all([listVerses(query), siteToday()]);
+  const today = day.iso;
   if (page.total === 0) {
     return (
       <EmptyState
@@ -119,6 +165,7 @@ async function VerseList({ query }: { query: Query }) {
                   id={v.id}
                   reference={v.reference}
                   defaultDate={today}
+                  timeZone={day.timeZone}
                 />
               ) : null}
               {v.featuredOn ? (
@@ -155,7 +202,7 @@ export default async function VersesPage({
 }: {
   searchParams: SearchParams;
 }) {
-  await requireAdminPage("/admin/verses");
+  const actor = await requireAdminPage("/admin/verses");
   const query = parseListQuery(await searchParams, FILTERS);
   return (
     <>
@@ -165,7 +212,7 @@ export default async function VersesPage({
         action={<Button href="/admin/verses/new">New verse</Button>}
       />
       <Suspense fallback={<ListSkeleton rows={1} />}>
-        <FeaturedToday />
+        <TodayVerse isOwner={actor.role === "OWNER"} />
       </Suspense>
       <ListToolbar
         action="/admin/verses"

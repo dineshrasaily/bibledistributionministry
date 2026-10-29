@@ -24,7 +24,7 @@ import { updateSiteSettingsAction } from "./settings";
 import { createEditorAction, setUserActiveAction } from "./users";
 import { createVerseAction } from "./verses";
 import { setPrayerStatusAction } from "./inbox";
-import { ROUTING_MSG } from "@/lib/validation/settings";
+import { ROUTING_MSG, TIMEZONE_MSG } from "@/lib/validation/settings";
 
 const auditCount = () => prisma.auditLog.count();
 
@@ -427,6 +427,82 @@ describe("Zelle and bank transfer settings", () => {
     expect(row.offlineGivingEnabled).toBe(false);
     expect(row.zelleEmail).toBeNull();
     expect(row.bankAccountNumber).toBeNull();
+    expect(await auditCount()).toBe(0);
+  });
+});
+
+describe("verse of the day settings", () => {
+  const verseForm = (extra: Record<string, string> = {}) =>
+    form({
+      ministryName: "Demo Ministry",
+      contactEmail: "hello@example.org",
+      isDemo: "on",
+      autoVerseTranslation: "KJV",
+      siteTimezone: "Asia/Kathmandu",
+      ...extra,
+    });
+
+  it("OWNER saves the toggle, translation and time zone; audited and revalidated", async () => {
+    await seedDemoContent(prisma);
+    setTestSession(await makeOwner());
+    const result = await updateSiteSettingsAction(null, verseForm());
+    expect(result).toMatchObject({ ok: true, message: "Settings saved." });
+    const row = await prisma.siteSettings.findUniqueOrThrow({
+      where: { id: "singleton" },
+    });
+    expect(row).toMatchObject({
+      autoVerseEnabled: false,
+      autoVerseTranslation: "KJV",
+      siteTimezone: "Asia/Kathmandu",
+    });
+    const [audit] = await prisma.auditLog.findMany();
+    expect(audit!.action).toBe("settings.update");
+    const changed = (audit!.metadata as { changed: string[] }).changed;
+    expect(changed).toEqual(
+      expect.arrayContaining([
+        "autoVerseEnabled",
+        "autoVerseTranslation",
+        "siteTimezone",
+      ]),
+    );
+    expect(revalidatePath).toHaveBeenCalledWith("/[locale]", "layout");
+  });
+
+  it("an unknown time zone is a field error; nothing saved or audited", async () => {
+    await seedDemoContent(prisma);
+    setTestSession(await makeOwner());
+    const result = await updateSiteSettingsAction(
+      null,
+      verseForm({ siteTimezone: "Mars/Base" }),
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      code: "VALIDATION",
+      fieldErrors: { siteTimezone: TIMEZONE_MSG },
+    });
+    const row = await prisma.siteSettings.findUniqueOrThrow({
+      where: { id: "singleton" },
+    });
+    expect(row.siteTimezone).toBe("America/New_York");
+    expect(await auditCount()).toBe(0);
+  });
+
+  it("EDITOR is FORBIDDEN (server-side); the settings stay unchanged", async () => {
+    await seedDemoContent(prisma);
+    setTestSession(await makeEditor());
+    const result = await updateSiteSettingsAction(
+      null,
+      verseForm({ autoVerseEnabled: "" }),
+    );
+    expect(result).toMatchObject({ ok: false, code: "FORBIDDEN" });
+    const row = await prisma.siteSettings.findUniqueOrThrow({
+      where: { id: "singleton" },
+    });
+    expect(row).toMatchObject({
+      autoVerseEnabled: true,
+      autoVerseTranslation: "WEB",
+      siteTimezone: "America/New_York",
+    });
     expect(await auditCount()).toBe(0);
   });
 });
