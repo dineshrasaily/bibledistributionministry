@@ -122,3 +122,13 @@ Files: `home-verse-{en,ne}-{1280,375}.png`, `home-top-{en,ne}-{1280,375}.png`, `
 
 ## Unresolved
 - E2E runs that cross midnight in New York could flake on the expected reference, because the spec computes it with `new Date()`.
+
+## Commit (release step)
+- Branch: `master`. Commit: **`f0dda16e3c2b3d424c6056e5eccbe7891a3740a5`**, `feat: automatic verse of the day (KJV/WEB, timezone-aware)`. 43 files, 6480 insertions, 69 deletions. No hook failures, no push or amend.
+- Before staging: `.local/bible-sources` was absent (`Test-Path` → False), and `.local/` is ignored (`.gitignore:25`). No archives were staged.
+- Data file `src/content/daily-verses.ts`: **146,364 bytes** (under 500 KB).
+- `package-lock.json` was not changed. `.gitignore` was not changed. Screenshots are not tracked.
+- Final `git status --porcelain -uall`: empty. `--ignored` lists only `!! .vscode/settings.json`, which is excluded by `.git/info/exclude` and left untracked and unstaged.
+- Read-only DB check after commit (pg, `default_transaction_read_only = on`, SELECT only; temp script deleted):
+  `{"activeOwners":1,"settings":{"ministryName":"Bible Distribution Ministry","autoVerseEnabled":true,"autoVerseTranslation":"WEB","siteTimezone":"America/New_York"}}`
+- Note: this appended section leaves `verification.md` modified after the commit.
