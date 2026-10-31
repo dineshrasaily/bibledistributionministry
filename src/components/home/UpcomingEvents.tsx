@@ -22,7 +22,7 @@ export async function UpcomingEvents({
   const format = await getFormatter({ locale });
 
   return (
-    <section aria-labelledby="events-title" className="bg-white py-20 md:py-28">
+    <section aria-labelledby="events-title" className="bg-cream py-20 md:py-28">
       <Container className="flex flex-col gap-12">
         <SectionHeader
           id="events-title"

@@ -82,7 +82,7 @@ function SectionShell({
       data-testid={`about-${id}`}
       className={cn(
         "py-14 md:py-20",
-        tone === "white" ? "bg-white" : "bg-ivory",
+        tone === "white" ? "bg-cream" : "bg-ivory",
       )}
     >
       <Container className="flex max-w-3xl flex-col gap-5">

@@ -267,7 +267,7 @@ export default async function SupportPage({ params }: PageProps) {
       <section
         aria-labelledby="support-info"
         data-testid="support-info"
-        className="bg-white py-14 md:py-20"
+        className="bg-cream py-14 md:py-20"
       >
         <Container className="flex max-w-3xl flex-col gap-5">
           {site.missionStatement ? (

@@ -62,7 +62,10 @@ test.describe("automatic verse of the day (owner)", () => {
         .getByLabel("Verse of the day on (optional)", { exact: true })
         .fill(siteToday());
       await page.getByRole("button", { name: "Publish", exact: true }).click();
-      await expect(page).toHaveURL(/toast=created/);
+      // Saved: the editor redirects to the new verse's edit page. (The
+      // `?toast=created` flag is stripped by FlashToast right after it shows,
+      // so asserting on it races.)
+      await expect(page).toHaveURL(/\/admin\/verses\/(?!new\b)[^/?#]+/);
 
       await page.goto("/en");
       const section = verseSection(page);

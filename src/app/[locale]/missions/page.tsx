@@ -76,7 +76,7 @@ export default async function MissionsPage({ params }: PageProps) {
         title={t("upcomingTitle")}
         events={upcoming}
         locale={locale}
-        className="bg-white"
+        className="bg-cream"
         empty={{
           title: t("upcomingEmptyTitle"),
           description: t("upcomingEmptyDescription"),

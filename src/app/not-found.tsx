@@ -10,7 +10,7 @@ export default function GlobalNotFound() {
           minHeight: "100vh",
           display: "grid",
           placeItems: "center",
-          background: "#FBF8F3",
+          background: "#F1EADF",
           color: "#1E2A44",
           fontFamily: "Georgia, serif",
           textAlign: "center",

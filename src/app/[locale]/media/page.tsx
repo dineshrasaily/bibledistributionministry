@@ -184,7 +184,7 @@ export default async function MediaPage({ params }: PageProps) {
           note={"note" in list ? list.note : undefined}
           emptyLabel={empty}
           isEmpty={list.items.length === 0}
-          className={i % 2 === 0 ? "bg-white" : "bg-ivory"}
+          className={i % 2 === 0 ? "bg-cream" : "bg-ivory"}
         >
           <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {list.items.map((item) => (
@@ -200,7 +200,7 @@ export default async function MediaPage({ params }: PageProps) {
         title={t("galleries")}
         emptyLabel={empty}
         isEmpty={center.galleries.length === 0}
-        className="bg-white"
+        className="bg-cream"
       >
         <div className="flex flex-col gap-12">
           {center.galleries.map((group) => {

@@ -86,7 +86,7 @@ export async function OfflineGivingSection({
     <section
       aria-labelledby="support-offline-title"
       data-testid="support-offline"
-      className="border-t border-beige bg-white py-14 md:py-20"
+      className="border-t border-beige bg-cream py-14 md:py-20"
     >
       <Container className="flex max-w-5xl flex-col gap-8">
         <header className="flex flex-col gap-4">

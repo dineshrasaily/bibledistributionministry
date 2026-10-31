@@ -20,7 +20,7 @@ export async function FeaturedVerse({
   return (
     <section
       aria-labelledby="verse-heading"
-      className="bg-white py-20 md:py-28"
+      className="bg-cream py-20 md:py-28"
     >
       <Container>
         <h2
